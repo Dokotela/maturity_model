@@ -21,7 +21,7 @@ Future<void> main() async {
   for (var file in fileStrings.keys) {
     content = content.copyWith(domains: [
       if (content.domains.isNotEmpty) ...content.domains,
-      Domain(title: file, groups: [])
+      Domain(title: file, groups: <Group>[])
     ]);
 
     /// Print the name to keep track
@@ -47,7 +47,7 @@ Future<void> main() async {
             level3: row[4],
             level4: row[5],
             level5: row[6],
-            items: [],
+            items: <Item>[],
           ),
         ]);
         content.domains.add(lastDomain);
