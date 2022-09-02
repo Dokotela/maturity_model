@@ -25,28 +25,26 @@ double activeHeight(BuildContext context) => MediaQuery.of(context).size.height;
 double activeWidth(BuildContext context) => MediaQuery.of(context).size.width;
 
 double textBoxBySize(BuildContext context) {
-  final _width = activeWidth(context);
-  if (_width < mobileBreakPointWidth) {
-    return _width * 0.8;
-  } else if (_width < tabletBreakPointWidth) {
-    return _width * 0.4;
-  } else if (_width < laptopBreakPointWidth) {
-    return _width * 0.3;
+  final width = activeWidth(context);
+  if (width < mobileBreakPointWidth) {
+    return width * 0.8;
+  } else if (width < tabletBreakPointWidth) {
+    return width * 0.4;
+  } else if (width < laptopBreakPointWidth) {
+    return width * 0.3;
   } else {
-    return _width * 0.3;
+    return width * 0.3;
   }
 }
 
 double doubleBySize(BuildContext context, num number) {
-  final _height = activeHeight(context);
-  final _width = activeWidth(context);
-  if (_width < mobileBreakPointWidth || _height < mobileBreakPointHeight) {
+  final height = activeHeight(context);
+  final width = activeWidth(context);
+  if (width < mobileBreakPointWidth || height < mobileBreakPointHeight) {
     return number.toDouble() * mobileCoefficient;
-  } else if (_width < tabletBreakPointWidth ||
-      _height < tabletBreakPointHeight) {
+  } else if (width < tabletBreakPointWidth || height < tabletBreakPointHeight) {
     return number.toDouble() * tabletCoefficient;
-  } else if (_width < laptopBreakPointWidth ||
-      _height < laptopBreakPointHeight) {
+  } else if (width < laptopBreakPointWidth || height < laptopBreakPointHeight) {
     return number.toDouble() * laptopCoefficient;
   } else {
     return number.toDouble();
@@ -54,12 +52,12 @@ double doubleBySize(BuildContext context, num number) {
 }
 
 double doubleByHeight(BuildContext context, num number) {
-  final _height = activeHeight(context);
-  if (_height < mobileBreakPointHeight) {
+  final height = activeHeight(context);
+  if (height < mobileBreakPointHeight) {
     return number.toDouble() * mobileCoefficient;
-  } else if (_height < tabletBreakPointHeight) {
+  } else if (height < tabletBreakPointHeight) {
     return number.toDouble() * tabletCoefficient;
-  } else if (_height < laptopBreakPointHeight) {
+  } else if (height < laptopBreakPointHeight) {
     return number.toDouble() * laptopCoefficient;
   } else {
     return number.toDouble();
@@ -67,12 +65,12 @@ double doubleByHeight(BuildContext context, num number) {
 }
 
 double doubleByWidth(BuildContext context, num number) {
-  final _width = activeWidth(context);
-  if (_width < mobileBreakPointWidth) {
+  final width = activeWidth(context);
+  if (width < mobileBreakPointWidth) {
     return number.toDouble() * mobileCoefficient;
-  } else if (_width < tabletBreakPointWidth) {
+  } else if (width < tabletBreakPointWidth) {
     return number.toDouble() * tabletCoefficient;
-  } else if (_width < laptopBreakPointWidth) {
+  } else if (width < laptopBreakPointWidth) {
     return number.toDouble() * laptopCoefficient;
   } else {
     return number.toDouble();

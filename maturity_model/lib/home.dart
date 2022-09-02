@@ -69,7 +69,7 @@ class HomeView extends StatelessWidget {
                             const Gap(16),
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
+                              children: const [
                                 Text(
                                   '1. Fill in the Organizational Information Below',
                                   style: TextStyle(fontSize: 16),
@@ -117,8 +117,8 @@ class HomeView extends StatelessWidget {
                                   height: 30,
                                   width: 700,
                                   child: TextFormField(
-                                    decoration:
-                                        InputDecoration(labelText: 'Name(s)'),
+                                    decoration: const InputDecoration(
+                                        labelText: 'Name(s)'),
                                   ),
                                 ),
                                 const Gap(12),
@@ -126,8 +126,8 @@ class HomeView extends StatelessWidget {
                                   height: 30,
                                   width: 700,
                                   child: TextFormField(
-                                    decoration:
-                                        InputDecoration(labelText: 'Date'),
+                                    decoration: const InputDecoration(
+                                        labelText: 'Date'),
                                   ),
                                 ),
                                 const Gap(12),
@@ -135,8 +135,8 @@ class HomeView extends StatelessWidget {
                                   height: 30,
                                   width: 700,
                                   child: TextFormField(
-                                    decoration:
-                                        InputDecoration(labelText: 'Location'),
+                                    decoration: const InputDecoration(
+                                        labelText: 'Location'),
                                   ),
                                 ),
                                 const Gap(12),
@@ -144,7 +144,7 @@ class HomeView extends StatelessWidget {
                                   height: 30,
                                   width: 700,
                                   child: TextFormField(
-                                    decoration: InputDecoration(
+                                    decoration: const InputDecoration(
                                         labelText: 'Organization'),
                                   ),
                                 ),
@@ -153,7 +153,7 @@ class HomeView extends StatelessWidget {
                                   height: 30,
                                   width: 700,
                                   child: TextFormField(
-                                    decoration: InputDecoration(
+                                    decoration: const InputDecoration(
                                         labelText: 'Additional Information'),
                                   ),
                                 )

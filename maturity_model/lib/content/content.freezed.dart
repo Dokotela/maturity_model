@@ -20,7 +20,7 @@ Content _$ContentFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$Content {
-  dynamic get domains => throw _privateConstructorUsedError;
+  List<Domain> get domains => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -31,7 +31,7 @@ mixin _$Content {
 abstract class $ContentCopyWith<$Res> {
   factory $ContentCopyWith(Content value, $Res Function(Content) then) =
       _$ContentCopyWithImpl<$Res>;
-  $Res call({dynamic domains});
+  $Res call({List<Domain> domains});
 }
 
 /// @nodoc
@@ -50,7 +50,7 @@ class _$ContentCopyWithImpl<$Res> implements $ContentCopyWith<$Res> {
       domains: domains == freezed
           ? _value.domains
           : domains // ignore: cast_nullable_to_non_nullable
-              as dynamic,
+              as List<Domain>,
     ));
   }
 }
@@ -61,7 +61,7 @@ abstract class _$$_ContentCopyWith<$Res> implements $ContentCopyWith<$Res> {
           _$_Content value, $Res Function(_$_Content) then) =
       __$$_ContentCopyWithImpl<$Res>;
   @override
-  $Res call({dynamic domains});
+  $Res call({List<Domain> domains});
 }
 
 /// @nodoc
@@ -78,7 +78,10 @@ class __$$_ContentCopyWithImpl<$Res> extends _$ContentCopyWithImpl<$Res>
     Object? domains = freezed,
   }) {
     return _then(_$_Content(
-      domains: domains == freezed ? _value.domains : domains,
+      domains: domains == freezed
+          ? _value._domains
+          : domains // ignore: cast_nullable_to_non_nullable
+              as List<Domain>,
     ));
   }
 }
@@ -86,14 +89,19 @@ class __$$_ContentCopyWithImpl<$Res> extends _$ContentCopyWithImpl<$Res>
 /// @nodoc
 @JsonSerializable()
 class _$_Content implements _Content {
-  _$_Content({this.domains = const <Domain>[]});
+  _$_Content({final List<Domain> domains = const <Domain>[]})
+      : _domains = domains;
 
   factory _$_Content.fromJson(Map<String, dynamic> json) =>
       _$$_ContentFromJson(json);
 
+  final List<Domain> _domains;
   @override
   @JsonKey()
-  final dynamic domains;
+  List<Domain> get domains {
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_domains);
+  }
 
   @override
   String toString() {
@@ -105,13 +113,13 @@ class _$_Content implements _Content {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$_Content &&
-            const DeepCollectionEquality().equals(other.domains, domains));
+            const DeepCollectionEquality().equals(other._domains, _domains));
   }
 
   @JsonKey(ignore: true)
   @override
   int get hashCode =>
-      Object.hash(runtimeType, const DeepCollectionEquality().hash(domains));
+      Object.hash(runtimeType, const DeepCollectionEquality().hash(_domains));
 
   @JsonKey(ignore: true)
   @override
@@ -127,12 +135,12 @@ class _$_Content implements _Content {
 }
 
 abstract class _Content implements Content {
-  factory _Content({final dynamic domains}) = _$_Content;
+  factory _Content({final List<Domain> domains}) = _$_Content;
 
   factory _Content.fromJson(Map<String, dynamic> json) = _$_Content.fromJson;
 
   @override
-  dynamic get domains;
+  List<Domain> get domains;
   @override
   @JsonKey(ignore: true)
   _$$_ContentCopyWith<_$_Content> get copyWith =>

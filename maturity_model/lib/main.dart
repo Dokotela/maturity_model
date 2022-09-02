@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:maturity_model/domain_view.dart';
 import 'package:maturity_model/home.dart';
+
+import 'generate/content.dart';
 
 void main() => runApp(const MyApp());
 
@@ -55,11 +58,11 @@ class _TabScaffoldState extends State<TabScaffold>
           controller: _tabController,
           children: [
             HomeView(_tabController),
-            const Icon(Icons.directions_car),
             const Icon(Icons.directions_transit),
-            const Icon(Icons.directions_bike),
-            const Icon(Icons.directions_car),
-            const Icon(Icons.directions_transit),
+            DomainView(content.domains[0], true),
+            DomainView(content.domains[1], false),
+            DomainView(content.domains[2], false),
+            DomainView(content.domains[3], false),
             const Icon(Icons.directions_bike),
           ],
         ),

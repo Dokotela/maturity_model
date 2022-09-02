@@ -6,7 +6,7 @@ part 'content.g.dart';
 @freezed
 class Content with _$Content {
   factory Content({
-    @Default(<Domain>[]) domains,
+    @Default(<Domain>[]) List<Domain> domains,
   }) = _Content;
 
   factory Content.fromJson(Map<String, dynamic> json) =>

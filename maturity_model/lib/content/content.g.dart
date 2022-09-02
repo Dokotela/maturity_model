@@ -7,21 +7,16 @@ part of 'content.dart';
 // **************************************************************************
 
 _$_Content _$$_ContentFromJson(Map<String, dynamic> json) => _$_Content(
-      domains: json['domains'] ?? const <Domain>[],
+      domains: (json['domains'] as List<dynamic>?)
+              ?.map((e) => Domain.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const <Domain>[],
     );
 
-Map<String, dynamic> _$$_ContentToJson(_$_Content instance) {
-  final val = <String, dynamic>{};
-
-  void writeNotNull(String key, dynamic value) {
-    if (value != null) {
-      val[key] = value;
-    }
-  }
-
-  writeNotNull('domains', instance.domains);
-  return val;
-}
+Map<String, dynamic> _$$_ContentToJson(_$_Content instance) =>
+    <String, dynamic>{
+      'domains': instance.domains.map((e) => e.toJson()).toList(),
+    };
 
 _$_Domain _$$_DomainFromJson(Map<String, dynamic> json) => _$_Domain(
       title: json['title'] as String,
