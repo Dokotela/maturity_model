@@ -1,5 +1,7 @@
+import 'package:creator/creator.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
+import 'package:maturity_model/creators.dart';
 
 import 'content/content.dart';
 
@@ -42,35 +44,6 @@ class DomainView extends StatelessWidget {
       ],
     );
 
-    Container itemRowBox(double width, String text) => Container(
-          decoration: BoxDecoration(border: Border.all()),
-          width: getWidth(MediaQuery.of(context).size.width, width),
-          child: Padding(
-            padding: const EdgeInsets.all(4.0),
-            child: Text(text),
-          ),
-        );
-
-    Widget itemRow(Item item) => IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              itemRowBox(columnFirst, item.text),
-              itemRowBox(columns,
-                  item.map(subGroup: (_) => '', question: (_) => _.level1)),
-              itemRowBox(columns,
-                  item.map(subGroup: (_) => '', question: (_) => _.level2)),
-              itemRowBox(columns,
-                  item.map(subGroup: (_) => '', question: (_) => _.level3)),
-              itemRowBox(columns,
-                  item.map(subGroup: (_) => '', question: (_) => _.level4)),
-              itemRowBox(columns,
-                  item.map(subGroup: (_) => '', question: (_) => _.level5)),
-              itemRowBox(columnComments, ''),
-            ],
-          ),
-        );
-
     Widget groupRowSizedBox(double width, Color color, String text) =>
         Container(
           decoration: BoxDecoration(color: color, border: Border.all()),
@@ -108,48 +81,127 @@ class DomainView extends StatelessWidget {
           ),
         );
 
-    final widgets = <Widget>[];
-    for (var group in domain.groups) {
-      widgets.add(const Gap(24));
-      widgets.add(groupRow(group));
-      for (var item in group.items) {
-        widgets.add(const Gap(4));
-        item.map(
-          subGroup: (_) {
-            widgets.add(const Gap(8));
-            widgets.add(Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                itemRowBox(0.3, _.text),
-              ],
-            ));
-          },
-          question: (_) => widgets.add(itemRow(_)),
-        );
-      }
-    }
+    Container itemRowBox(
+      double width,
+      String text, [
+      String? name,
+      int? value,
+    ]) =>
+        Container(
+            decoration: BoxDecoration(border: Border.all()),
+            width: getWidth(MediaQuery.of(context).size.width, width),
+            child: Padding(
+                padding: const EdgeInsets.all(4.0),
+                child: name == null
+                    ? Text(text)
+                    : Watcher(
+                        (context, ref, child) => TextButton(
+                            onPressed: () {
+                              if (ref.read(itemCreator(name)) == value) {
+                                ref.set(itemCreator(name), 0);
+                              } else {
+                                ref.set(itemCreator(name), value);
+                              }
+                            },
+                            child: Text(text,
+                                style: TextStyle(
+                                  fontWeight:
+                                      ref.watch(itemCreator(name)) == value
+                                          ? FontWeight.bold
+                                          : FontWeight.normal,
+                                  color: ref.watch(itemCreator(name)) == value
+                                      ? Colors.blue
+                                      : Colors.black,
+                                ))),
+                      )));
 
-    return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            dataTable,
-            Expanded(
-              child: Scrollbar(
-                controller: scrollController,
-                thumbVisibility: true,
-                child: SingleChildScrollView(
+    Widget itemRow(Item item, String name) => IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              itemRowBox(columnFirst, item.text),
+              itemRowBox(
+                  columns,
+                  item.map(subGroup: (_) => '', question: (_) => _.level1),
+                  name,
+                  1),
+              itemRowBox(
+                  columns,
+                  item.map(subGroup: (_) => '', question: (_) => _.level2),
+                  name,
+                  2),
+              itemRowBox(
+                  columns,
+                  item.map(subGroup: (_) => '', question: (_) => _.level3),
+                  name,
+                  3),
+              itemRowBox(
+                  columns,
+                  item.map(subGroup: (_) => '', question: (_) => _.level4),
+                  name,
+                  4),
+              itemRowBox(
+                  columns,
+                  item.map(subGroup: (_) => '', question: (_) => _.level5),
+                  name,
+                  5),
+              itemRowBox(columnComments, ''),
+            ],
+          ),
+        );
+
+    return Watcher((context, ref, child) {
+      return Scaffold(
+        body: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              dataTable,
+              Expanded(
+                child: Scrollbar(
                   controller: scrollController,
-                  child: Column(
-                    children: widgets,
+                  thumbVisibility: true,
+                  child: SingleChildScrollView(
+                    controller: scrollController,
+                    child: Watcher(
+                      (context, ref, child) {
+                        var i = 0;
+                        final widgets = <Widget>[];
+                        for (var group in domain.groups) {
+                          widgets.add(const Gap(24));
+                          widgets.add(groupRow(group));
+                          ref.read(groupCreator(group.title));
+                          i = 0;
+                          for (var item in group.items) {
+                            widgets.add(const Gap(4));
+                            item.map(
+                              subGroup: (_) {
+                                widgets.add(const Gap(8));
+                                widgets.add(Row(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  children: [
+                                    itemRowBox(0.3, _.text),
+                                  ],
+                                ));
+                              },
+                              question: (_) {
+                                widgets.add(itemRow(_, '${group.title}/$i'));
+                                i++;
+                              },
+                            );
+                          }
+                          ref.set<int>(numberItemsCreator(group.title), i);
+                        }
+                        return Column(children: widgets);
+                      },
+                    ),
                   ),
                 ),
               ),
-            )
-          ],
+            ],
+          ),
         ),
-      ),
-    );
+      );
+    });
   }
 }

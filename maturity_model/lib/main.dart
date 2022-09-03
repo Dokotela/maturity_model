@@ -1,10 +1,12 @@
+import 'package:creator/creator.dart';
 import 'package:flutter/material.dart';
 import 'package:maturity_model/domain_view.dart';
 import 'package:maturity_model/home.dart';
+import 'package:maturity_model/organizational_view.dart';
 
 import 'generate/content.dart';
 
-void main() => runApp(const MyApp());
+void main() => runApp(CreatorGraph(child: const MyApp()));
 
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
@@ -58,7 +60,7 @@ class _TabScaffoldState extends State<TabScaffold>
           controller: _tabController,
           children: [
             HomeView(_tabController),
-            const Icon(Icons.directions_transit),
+            OrganizationalView(content),
             DomainView(content.domains[0], true),
             DomainView(content.domains[1], false),
             DomainView(content.domains[2], false),
