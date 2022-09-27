@@ -95,24 +95,31 @@ class DomainView extends StatelessWidget {
                 child: name == null
                     ? Text(text)
                     : Watcher(
-                        (context, ref, child) => TextButton(
-                            onPressed: () {
-                              if (ref.read(itemCreator(name)) == value) {
-                                ref.set(itemCreator(name), 0);
-                              } else {
-                                ref.set(itemCreator(name), value);
-                              }
-                            },
-                            child: Text(text,
-                                style: TextStyle(
-                                  fontWeight:
-                                      ref.watch(itemCreator(name)) == value
-                                          ? FontWeight.bold
-                                          : FontWeight.normal,
-                                  color: ref.watch(itemCreator(name)) == value
-                                      ? Colors.blue
-                                      : Colors.black,
-                                ))),
+                        (context, ref, child) {
+                          final level = ref.read(mmLevelCreator);
+                          return TextButton(
+                              onPressed: () {
+                                if (ref.read(itemCreator(level, name)) ==
+                                    value) {
+                                  ref.set(itemCreator(level, name), 0);
+                                } else {
+                                  ref.set(itemCreator(level, name), value);
+                                }
+                              },
+                              child: Text(text,
+                                  style: TextStyle(
+                                    fontWeight:
+                                        ref.watch(itemCreator(level, name)) ==
+                                                value
+                                            ? FontWeight.bold
+                                            : FontWeight.normal,
+                                    color:
+                                        ref.watch(itemCreator(level, name)) ==
+                                                value
+                                            ? Colors.blue
+                                            : Colors.black,
+                                  )));
+                        },
                       )));
 
     Widget itemRow(Item item, String name) => IntrinsicHeight(
@@ -170,7 +177,8 @@ class DomainView extends StatelessWidget {
                         for (var group in domain.groups) {
                           widgets.add(const Gap(24));
                           widgets.add(groupRow(group));
-                          ref.read(groupCreator(group.title));
+                          ref.read(groupCreator(
+                              ref.read(mmLevelCreator), group.title));
                           i = 0;
                           for (var item in group.items) {
                             widgets.add(const Gap(4));
@@ -190,7 +198,10 @@ class DomainView extends StatelessWidget {
                               },
                             );
                           }
-                          ref.set<int>(numberItemsCreator(group.title), i);
+                          ref.set<int>(
+                              numberItemsCreator(
+                                  ref.read(mmLevelCreator), group.title),
+                              i);
                         }
                         return Column(children: widgets);
                       },

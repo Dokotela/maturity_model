@@ -19,17 +19,19 @@ final organizationCreator = Creator.value('');
 
 final additionalInformationCreator = Creator.value('');
 
-final groupCreator = Creator.arg1<int, String>((ref, name) {
+final groupCreator = Creator.arg2<int, MmLevel, String>((ref, mmLevel, name) {
   var sum = 0;
-  final numberOfItems = ref.watch(numberItemsCreator(name));
+  final numberOfItems = ref.watch(numberItemsCreator(mmLevel, name));
   for (var i = 0; i < numberOfItems; i++) {
-    sum += ref.watch(itemCreator('$name/$i'));
+    sum += ref.watch(itemCreator(mmLevel, '$name/$i'));
   }
   return sum;
 }, keepAlive: true);
 
-final itemCreator =
-    Creator.arg1<int, String>((ref, itemId) => 0, keepAlive: true);
+final itemCreator = Creator.arg2<int, MmLevel, String>(
+    (ref, mmLevel, itemId) => 0,
+    keepAlive: true);
 
-final numberItemsCreator =
-    Creator.arg1<int, String>((ref, itemId) => 0, keepAlive: true);
+final numberItemsCreator = Creator.arg2<int, MmLevel, String>(
+    (ref, mmLevel, itemId) => 0,
+    keepAlive: true);

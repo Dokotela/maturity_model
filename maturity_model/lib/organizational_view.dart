@@ -79,8 +79,10 @@ class OrganizationalView extends StatelessWidget {
           info.add({
             "type": domain.title,
             "index": domain.groups[i].title,
-            "value": ref.watch(groupCreator(domain.groups[i].title)) /
-                ref.watch(numberItemsCreator(domain.groups[i].title)),
+            "value": ref.watch(groupCreator(
+                    ref.read(mmLevelCreator), domain.groups[i].title)) /
+                ref.watch(numberItemsCreator(
+                    ref.read(mmLevelCreator), domain.groups[i].title)),
           });
         }
         return info;
@@ -90,14 +92,14 @@ class OrganizationalView extends StatelessWidget {
           (context, ref, child) => radarGraph(domain.title, newData(ref))));
     }
 
-    Widget overallGraph(Ref ref) {
+    Widget overallGraph(Ref ref, MmLevel level) {
       final info = <Map<dynamic, dynamic>>[];
 
       double domainTotal(Domain domain) {
         double sum = 0;
         for (var i = 0; i < domain.groups.length; i++) {
-          sum += ref.watch(groupCreator(domain.groups[i].title)) /
-              ref.watch(numberItemsCreator(domain.groups[i].title));
+          sum += ref.watch(groupCreator(level, domain.groups[i].title)) /
+              ref.watch(numberItemsCreator(level, domain.groups[i].title));
         }
 
         return sum / domain.groups.length;
