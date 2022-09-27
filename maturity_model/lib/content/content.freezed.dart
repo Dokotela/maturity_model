@@ -20,6 +20,7 @@ Content _$ContentFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$Content {
+  MmLevel get level => throw _privateConstructorUsedError;
   List<Domain> get domains => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -31,7 +32,7 @@ mixin _$Content {
 abstract class $ContentCopyWith<$Res> {
   factory $ContentCopyWith(Content value, $Res Function(Content) then) =
       _$ContentCopyWithImpl<$Res>;
-  $Res call({List<Domain> domains});
+  $Res call({MmLevel level, List<Domain> domains});
 }
 
 /// @nodoc
@@ -44,9 +45,14 @@ class _$ContentCopyWithImpl<$Res> implements $ContentCopyWith<$Res> {
 
   @override
   $Res call({
+    Object? level = freezed,
     Object? domains = freezed,
   }) {
     return _then(_value.copyWith(
+      level: level == freezed
+          ? _value.level
+          : level // ignore: cast_nullable_to_non_nullable
+              as MmLevel,
       domains: domains == freezed
           ? _value.domains
           : domains // ignore: cast_nullable_to_non_nullable
@@ -61,7 +67,7 @@ abstract class _$$_ContentCopyWith<$Res> implements $ContentCopyWith<$Res> {
           _$_Content value, $Res Function(_$_Content) then) =
       __$$_ContentCopyWithImpl<$Res>;
   @override
-  $Res call({List<Domain> domains});
+  $Res call({MmLevel level, List<Domain> domains});
 }
 
 /// @nodoc
@@ -75,9 +81,14 @@ class __$$_ContentCopyWithImpl<$Res> extends _$ContentCopyWithImpl<$Res>
 
   @override
   $Res call({
+    Object? level = freezed,
     Object? domains = freezed,
   }) {
     return _then(_$_Content(
+      level: level == freezed
+          ? _value.level
+          : level // ignore: cast_nullable_to_non_nullable
+              as MmLevel,
       domains: domains == freezed
           ? _value._domains
           : domains // ignore: cast_nullable_to_non_nullable
@@ -89,12 +100,15 @@ class __$$_ContentCopyWithImpl<$Res> extends _$ContentCopyWithImpl<$Res>
 /// @nodoc
 @JsonSerializable()
 class _$_Content implements _Content {
-  _$_Content({final List<Domain> domains = const <Domain>[]})
+  _$_Content(
+      {required this.level, final List<Domain> domains = const <Domain>[]})
       : _domains = domains;
 
   factory _$_Content.fromJson(Map<String, dynamic> json) =>
       _$$_ContentFromJson(json);
 
+  @override
+  final MmLevel level;
   final List<Domain> _domains;
   @override
   @JsonKey()
@@ -105,7 +119,7 @@ class _$_Content implements _Content {
 
   @override
   String toString() {
-    return 'Content(domains: $domains)';
+    return 'Content(level: $level, domains: $domains)';
   }
 
   @override
@@ -113,13 +127,16 @@ class _$_Content implements _Content {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$_Content &&
+            const DeepCollectionEquality().equals(other.level, level) &&
             const DeepCollectionEquality().equals(other._domains, _domains));
   }
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode =>
-      Object.hash(runtimeType, const DeepCollectionEquality().hash(_domains));
+  int get hashCode => Object.hash(
+      runtimeType,
+      const DeepCollectionEquality().hash(level),
+      const DeepCollectionEquality().hash(_domains));
 
   @JsonKey(ignore: true)
   @override
@@ -135,10 +152,13 @@ class _$_Content implements _Content {
 }
 
 abstract class _Content implements Content {
-  factory _Content({final List<Domain> domains}) = _$_Content;
+  factory _Content({required final MmLevel level, final List<Domain> domains}) =
+      _$_Content;
 
   factory _Content.fromJson(Map<String, dynamic> json) = _$_Content.fromJson;
 
+  @override
+  MmLevel get level;
   @override
   List<Domain> get domains;
   @override

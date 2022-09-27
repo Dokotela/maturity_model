@@ -1,4 +1,13 @@
 import 'package:creator/creator.dart';
+import 'content/content.dart';
+import 'content/countryContent.dart';
+import 'content/institutionalContent.dart';
+
+final mmLevelCreator = Creator.value(MmLevel.institutional);
+
+final countryContentCreator = Creator.value(countryContent);
+
+final institutionalContentCreator = Creator.value(institutionalContent);
 
 final nameCreator = Creator.value('');
 

@@ -19,9 +19,11 @@ Future<void> main() async {
 
   final fileStrings = await downloadSheets(credentials, sheetId);
 
-  var content = Content();
+  var institutionalContent = Content(level: MmLevel.institutional);
+  var countryContent = Content(level: MmLevel.country);
 
   String getName(String file) {
+    file = file.split('.').first.split('_').last;
     switch (file) {
       case 'dmit.tsv':
         return 'Data Management and Information Technology';
@@ -36,7 +38,14 @@ Future<void> main() async {
     }
   }
 
+  Content content;
+
   for (var file in fileStrings.keys) {
+    if (file.contains('country')) {
+      content = countryContent;
+    } else {
+      content = institutionalContent;
+    }
     content = content.copyWith(domains: <Domain>[
       if (content.domains.isNotEmpty) ...content.domains,
       Domain(title: getName(file), groups: <Group>[])
@@ -108,11 +117,19 @@ Future<void> main() async {
         ]);
       }
     }
+    if (file.contains('country')) {
+      countryContent = content;
+    } else {
+      institutionalContent = content;
+    }
   }
 
   const jsonEncoder = JsonEncoder.withIndent('    ');
   String jsonPrettyPrint(Map<String, dynamic> map) => jsonEncoder.convert(map);
-  await File('content.dart').writeAsString(
+  await File('countryContent.dart').writeAsString(
       "import '../content/content.dart';\n\n"
-      'final content = Content.fromJson(${jsonPrettyPrint(content.toJson())});');
+      'final countryContent = Content.fromJson(${jsonPrettyPrint(countryContent.toJson())});');
+  await File('institutionalContent.dart').writeAsString(
+      "import '../content/content.dart';\n\n"
+      'final institutionalContent = Content.fromJson(${jsonPrettyPrint(institutionalContent.toJson())});');
 }

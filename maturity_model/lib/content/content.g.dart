@@ -7,6 +7,7 @@ part of 'content.dart';
 // **************************************************************************
 
 _$_Content _$$_ContentFromJson(Map<String, dynamic> json) => _$_Content(
+      level: $enumDecode(_$MmLevelEnumMap, json['level']),
       domains: (json['domains'] as List<dynamic>?)
               ?.map((e) => Domain.fromJson(e as Map<String, dynamic>))
               .toList() ??
@@ -15,8 +16,14 @@ _$_Content _$$_ContentFromJson(Map<String, dynamic> json) => _$_Content(
 
 Map<String, dynamic> _$$_ContentToJson(_$_Content instance) =>
     <String, dynamic>{
+      'level': _$MmLevelEnumMap[instance.level]!,
       'domains': instance.domains.map((e) => e.toJson()).toList(),
     };
+
+const _$MmLevelEnumMap = {
+  MmLevel.institutional: 'institutional',
+  MmLevel.country: 'country',
+};
 
 _$_Domain _$$_DomainFromJson(Map<String, dynamic> json) => _$_Domain(
       title: json['title'] as String,

@@ -1,10 +1,12 @@
 import 'package:creator/creator.dart';
 import 'package:flutter/material.dart';
+import 'package:maturity_model/content/content.dart';
+import 'package:maturity_model/content/countryContent.dart';
+import 'package:maturity_model/content/institutionalContent.dart';
+import 'package:maturity_model/creators.dart';
 import 'package:maturity_model/domain_view.dart';
 import 'package:maturity_model/home.dart';
 import 'package:maturity_model/organizational_view.dart';
-
-import 'generate/content.dart';
 
 void main() => runApp(CreatorGraph(child: const MyApp()));
 
@@ -56,17 +58,24 @@ class _TabScaffoldState extends State<TabScaffold>
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: TabBarView(
-          controller: _tabController,
-          children: [
-            HomeView(_tabController),
-            OrganizationalView(content),
-            DomainView(content.domains[0], true),
-            DomainView(content.domains[1], false),
-            DomainView(content.domains[2], false),
-            DomainView(content.domains[3], false),
-            const Icon(Icons.directions_bike),
-          ],
+        child: Watcher(
+          (context, ref, child) {
+            final content = ref.read(mmLevelCreator) == MmLevel.country
+                ? countryContent
+                : institutionalContent;
+            return TabBarView(
+              controller: _tabController,
+              children: [
+                HomeView(_tabController),
+                OrganizationalView(content),
+                DomainView(content.domains[0], true),
+                DomainView(content.domains[1], false),
+                DomainView(content.domains[2], false),
+                DomainView(content.domains[3], false),
+                const Icon(Icons.directions_bike),
+              ],
+            );
+          },
         ),
       ),
     );

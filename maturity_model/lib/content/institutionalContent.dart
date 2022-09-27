@@ -1,9 +1,10 @@
 import '../content/content.dart';
 
-final content = Content.fromJson({
+final institutionalContent = Content.fromJson({
+    "level": "institutional",
     "domains": [
         {
-            "title": "Data Management and Information Technology",
+            "title": "",
             "groups": [
                 {
                     "title": "Data Sources",
@@ -1243,7 +1244,7 @@ final content = Content.fromJson({
             ]
         },
         {
-            "title": "Management and Governance",
+            "title": "",
             "groups": [
                 {
                     "title": "Leadership and Coordination",
@@ -1989,7 +1990,7 @@ final content = Content.fromJson({
             ]
         },
         {
-            "title": "Knowledge Management and Sharing",
+            "title": "",
             "groups": [
                 {
                     "title": "Knowledge Processes (KM)",
@@ -2824,7 +2825,7 @@ final content = Content.fromJson({
             ]
         },
         {
-            "title": "Innovation",
+            "title": "",
             "groups": [
                 {
                     "title": "Key Concepts",

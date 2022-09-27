@@ -6,11 +6,17 @@ part 'content.g.dart';
 @freezed
 class Content with _$Content {
   factory Content({
+    required MmLevel level,
     @Default(<Domain>[]) List<Domain> domains,
   }) = _Content;
 
   factory Content.fromJson(Map<String, dynamic> json) =>
       _$ContentFromJson(json);
+}
+
+enum MmLevel {
+  institutional,
+  country,
 }
 
 @freezed
