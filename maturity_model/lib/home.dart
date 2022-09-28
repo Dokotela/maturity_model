@@ -159,33 +159,33 @@ class HomeView extends StatelessWidget {
                 const Gap(32),
                 Watcher(
                   ((context, ref, child) {
-                    // final level = ref.watch(mmLevelCreator);
+                    final level = ref.watch(mmLevelCreator);
                     return Column(
                       children: [
-                        // ListTile(
-                        //   title: const Text('Institutional'),
-                        //   leading: Radio<MmLevel>(
-                        //     value: MmLevel.institutional,
-                        //     groupValue: level,
-                        //     onChanged: (MmLevel? value) {
-                        //       if (value != null) {
-                        //         ref.update(mmLevelCreator, (p0) => value);
-                        //       }
-                        //     },
-                        //   ),
-                        // ),
-                        // ListTile(
-                        //   title: const Text('Country'),
-                        //   leading: Radio<MmLevel>(
-                        //     value: MmLevel.country,
-                        //     groupValue: level,
-                        //     onChanged: (MmLevel? value) {
-                        //       if (value != null) {
-                        //         ref.update(mmLevelCreator, (p0) => value);
-                        //       }
-                        //     },
-                        //   ),
-                        // ),
+                        ListTile(
+                          title: const Text('Institutional'),
+                          leading: Radio<MmLevel>(
+                            value: MmLevel.institutional,
+                            groupValue: level,
+                            onChanged: (MmLevel? value) {
+                              if (value != null) {
+                                ref.update(mmLevelCreator, (p0) => value);
+                              }
+                            },
+                          ),
+                        ),
+                        ListTile(
+                          title: const Text('Country'),
+                          leading: Radio<MmLevel>(
+                            value: MmLevel.country,
+                            groupValue: level,
+                            onChanged: (MmLevel? value) {
+                              if (value != null) {
+                                ref.update(mmLevelCreator, (p0) => value);
+                              }
+                            },
+                          ),
+                        ),
                       ],
                     );
                   }),
