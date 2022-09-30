@@ -14,7 +14,7 @@ version=${fullVersion#*+}
 
 # only needed the first time
 gcloud config set project $projectId
-# gcloud auth login
+gcloud auth login
 
 # placeholder script in case a command fails to run on an M1 machine. If so, just add $m1 to the command and it should work as intended
 # if [[ $(uname -m) == 'arm64' ]]; then

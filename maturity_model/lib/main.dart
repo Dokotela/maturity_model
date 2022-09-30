@@ -60,7 +60,7 @@ class _TabScaffoldState extends State<TabScaffold>
         padding: const EdgeInsets.all(16.0),
         child: Watcher(
           (context, ref, child) {
-            final content = ref.read(mmLevelCreator) == MmLevel.country
+            final content = ref.watch(mmLevelCreator) == MmLevel.country
                 ? countryContent
                 : institutionalContent;
             return TabBarView(
