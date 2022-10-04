@@ -72,7 +72,8 @@ class OrganizationalView extends StatelessWidget {
           ],
         );
 
-    for (var domain in content.domains) {
+    for (var i = 0; i < content.domains.length; i++) {
+      final domain = content.domains[i];
       List<Map<dynamic, dynamic>> newData(Ref ref) {
         final info = <Map<dynamic, dynamic>>[];
         for (var i = 0; i < domain.groups.length; i++) {
@@ -88,12 +89,21 @@ class OrganizationalView extends StatelessWidget {
         return info;
       }
 
-      textWidgetsList.add(Watcher(
-          (context, ref, child) => radarGraph(domain.title, newData(ref))));
+      textWidgetsList.add(
+        Watcher(
+          (context, ref, child) => Container(
+            padding: const EdgeInsets.only(top: 30, bottom: 30),
+            color: i % 2 == 0 ? Colors.grey[200] : Colors.lightBlue[50],
+            width: MediaQuery.of(context).size.width * 0.4,
+            child: radarGraph(domain.title, newData(ref)),
+          ),
+        ),
+      );
     }
 
-    Widget overallGraph(Ref ref, MmLevel level) {
+    Widget overallGraph(Ref ref) {
       final info = <Map<dynamic, dynamic>>[];
+      final level = ref.read(mmLevelCreator);
 
       double domainTotal(Domain domain) {
         double sum = 0;
@@ -105,31 +115,32 @@ class OrganizationalView extends StatelessWidget {
         return sum / domain.groups.length;
       }
 
-      for (var i = 0; i < content.domains.length; i++) {
+      for (var j = 0; j < content.domains.length; j++) {
         info.add({
           "type": 'maturity model',
-          "index": content.domains[i].title,
-          "value": domainTotal(content.domains[i]),
+          "index": content.domains[j].title,
+          "value": domainTotal(content.domains[j]),
         });
       }
+      print(info);
 
       return radarGraph('Maturity Assessment', info);
     }
 
     return Scaffold(
-      body: Column(
+      body: Row(
         children: [
-          Expanded(
-            child: GridView.count(
-              crossAxisCount: 2,
-              childAspectRatio: 2,
-              padding: EdgeInsets.zero,
+          Watcher(
+            (context, ref, child) => SizedBox(
+              width: MediaQuery.of(context).size.width * 0.5,
+              child: overallGraph(ref),
+            ),
+          ),
+          SingleChildScrollView(
+            child: Column(
               children: textWidgetsList,
             ),
           ),
-          // Watcher(
-          //   (context, ref, child) => overallGraph(ref),
-          // )
         ],
       ),
     );
