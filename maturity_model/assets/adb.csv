@@ -1,0 +1,71 @@
+framework_id,domain,subdomain,item_id,item_type,maturity_level,text_english,response_type,scoring_note
+ADB,Core Readiness,Identification of needs,ADB_CR_IN_1,statement,,"Organization has properly identified its needs.",likert_1_5,
+ADB,Core Readiness,Identification of needs,ADB_CR_IN_2,statement,,"Solutions other than eHealth/telehealth have been explored.",likert_1_5,
+ADB,Core Readiness,Dissatisfaction with status quo,ADB_CR_DSQ_1,statement,,"There is general dissatisfaction with current handling of issues that could be addressed through eHealth/telehealth.",likert_1_5,
+ADB,Core Readiness,Dissatisfaction with status quo,ADB_CR_DSQ_2,statement,,"Solutions other than eHealth/telehealth have been explored.",likert_1_5,Duplicate of IN_2
+ADB,Core Readiness,Awareness about eHealth/telehealth,ADB_CR_AW_1,statement,,"Awareness of ICT and internet's role in healthcare exists among the planners.",likert_1_5,
+ADB,Core Readiness,Awareness about eHealth/telehealth,ADB_CR_AW_2,statement,,"Awareness of ICT and internet's role in addressing the prioritized needs exists among the planners.",likert_1_5,
+ADB,Core Readiness,Level of technology and healthcare literacy,ADB_CR_LIT_1,statement,,"There is general comfort in using ICT/internet among users of the proposed eHealth/telehealth project.",likert_1_5,
+ADB,Core Readiness,Level of technology and healthcare literacy,ADB_CR_LIT_2,statement,,"There is general comfort among staff in using ICT/internet for storing patient information.",likert_1_5,
+ADB,Core Readiness,Level of technology and healthcare literacy,ADB_CR_LIT_3,statement,,"There is general comfort among staff in using ICT/internet for the purpose of patient care and education.",likert_1_5,
+ADB,Core Readiness,Level of technology and healthcare literacy,ADB_CR_LIT_4,statement,,"There is general comfort among patients in using ICT/internet as part of daily living.",likert_1_5,
+ADB,Core Readiness,Level of technology and healthcare literacy,ADB_CR_LIT_5,statement,,"There is general comfort among patients in using ICT/internet for the purpose of patient care and education.",likert_1_5,
+ADB,Core Readiness,Comfort with technology,ADB_CR_CT_1,statement,,"There is general comfort in using ICT/internet among users of the proposed eHealth/telehealth project.",likert_1_5,Duplicate of LIT_1
+ADB,Core Readiness,Comfort with technology,ADB_CR_CT_2,statement,,"There is general comfort among staff in using ICT/internet for storing patient information.",likert_1_5,Duplicate of LIT_2
+ADB,Core Readiness,Comfort with technology,ADB_CR_CT_3,statement,,"There is general comfort among staff in using ICT/internet for the purpose of patient care and education.",likert_1_5,Duplicate of LIT_3
+ADB,Core Readiness,Trust on the use of ICT,ADB_CR_TR_1,statement,,"All the policymakers and senior administrators trust new technology as a solution to the identified problems",likert_1_5,
+ADB,Core Readiness,Trust on the use of ICT,ADB_CR_TR_2,statement,,"All the staff members trust new technology as a solution to the identified problems",likert_1_5,
+ADB,Core Readiness,Trust on the use of ICT,ADB_CR_TR_3,statement,,"There are plans in place to increase staff's trust and confidence in the new technology",likert_1_5,
+ADB,Core Readiness,Planning for the new eHealth project,ADB_CR_PL_1,statement,,"An individual or a group has taken responsibility for planning",likert_1_5,
+ADB,Core Readiness,Planning for the new eHealth project,ADB_CR_PL_2,statement,,"All the user groups among staff and other stakeholders have been involved in planning",likert_1_5,
+ADB,Core Readiness,Planning for the new eHealth project,ADB_CR_PL_3,statement,,"There is an appropriate plan for implementation of eHealth/telehealth initiative",likert_1_5,
+ADB,Core Readiness,Planning for the new eHealth project,ADB_CR_PL_4,statement,,"The implementation plan includes proper budgeting and identification of resources with a specific budget for eHealth",likert_1_5,
+ADB,Core Readiness,Planning for the new eHealth project,ADB_CR_PL_5,statement,,"There is an appropriate plan for evaluation of eHealth/telehealth initiative, including option for external evaluation",likert_1_5,
+ADB,Core Readiness,Overall satisfaction and willingness,ADB_CR_SW_1,statement,,"The proposed technology is appropriate according to the conditions within the organization",likert_1_5,
+ADB,Core Readiness,Overall satisfaction and willingness,ADB_CR_SW_2,statement,,"There is a willingness among staff to implement the technology for its intended purpose",likert_1_5,
+ADB,Core Readiness,Integration of technology,ADB_CR_IT_1,statement,,"Integration of technology with the current services has been considered in the planning process",likert_1_5,
+ADB,Core Readiness,Integration of technology,ADB_CR_IT_2,statement,,"There is a plan in place to integrate eHealth/telehealth with the current services",likert_1_5,
+ADB,Technological Readiness,Speed and quality of ICT/internet at the institution,ADB_TR_SQ_1,statement,,"Speed of connections is appropriate for the proposed use",likert_1_5,
+ADB,Technological Readiness,Speed and quality of ICT/internet at the institution,ADB_TR_SQ_2,statement,,"Quality of connections is appropriate for the proposed use",likert_1_5,
+ADB,Technological Readiness,Service/support for ICT,ADB_TR_SS_1,statement,,"Service/support is available within a reasonable time frame for the proposed use",likert_1_5,
+ADB,Technological Readiness,Service/support for ICT,ADB_TR_SS_2,statement,,"Local support is proficient to address most of the problems related to the proposed use",likert_1_5,
+ADB,Technological Readiness,Hardware and software,ADB_TR_HW_1,statement,,"Hardware and software required for the proposed project are readily available",likert_1_5,
+ADB,Technological Readiness,Hardware and software,ADB_TR_HW_2,statement,,"Hardware and software required for the proposed project are readily affordable",likert_1_5,
+ADB,Technological Readiness,Availability and affordability of the desired ICT,ADB_TR_AA_1,statement,,"Required ICT (telephone/internet/bandwidth) is easily available for the institution",likert_1_5,
+ADB,Technological Readiness,Availability and affordability of the desired ICT,ADB_TR_AA_2,statement,,"Required ICT (telephone/internet/bandwidth) is easily available for the institutions involved",likert_1_5,
+ADB,Technological Readiness,Institutional access to ICT/Internet training,ADB_TR_IAT_1,statement,,"Programs are in place to train the users for proposed project.",likert_1_5,
+ADB,Technological Readiness,Institutional access to ICT/Internet training,ADB_TR_IAT_2,statement,,"Manpower is in place to train the users for proposed project.",likert_1_5,
+ADB,Technological Readiness,Speed and quality of ICT/Internet at the institution,ADB_TR_SQ2_1,statement,,"Speed of connections is appropriate for the proposed use",likert_1_5,Duplicate of SQ_1
+ADB,Technological Readiness,Speed and quality of ICT/Internet at the institution,ADB_TR_SQ2_2,statement,,"Quality of connections is appropriate for the proposed use",likert_1_5,Duplicate of SQ_2
+ADB,Technological Readiness,Service/Support for ICT,ADB_TR_SS2_1,statement,,"Service/support is available within a reasonable time frame for the proposed use.",likert_1_5,Duplicate of SS_1
+ADB,Technological Readiness,Service/Support for ICT,ADB_TR_SS2_2,statement,,"Local support is proficient to address most of the problems related to the proposed use.",likert_1_5,Duplicate of SS_2
+ADB,Learning Readiness,ICT/internet training for healthcare providers,ADB_LR_TR_1,statement,,"Personnel and programs are in place for training",likert_1_5,
+ADB,Learning Readiness,Use of ICT/internet to enhance education of care providers,ADB_LR_ED_1,statement,,"Programs exist for continuous education",likert_1_5,
+ADB,Learning Readiness,Use of ICT/internet to enhance education of care providers,ADB_LR_ED_2,statement,,"ICT/internet is readily used in continuous education",likert_1_5,
+ADB,Learning Readiness,Use of ICT/internet to enhance education of care providers,ADB_LR_ED_3,statement,,"Programs are in place to use ICT/internet for continuous education",likert_1_5,
+ADB,Learning Readiness,Involvement of healthcare providers in eHealth/telehealth projects,ADB_LR_INV_1,statement,,"There is a plan in place to involve healthcare providers in the planning of new eHealth/telehealth interventions",likert_1_5,
+ADB,Learning Readiness,Involvement of healthcare providers in eHealth/telehealth projects,ADB_LR_INV_2,statement,,"There is a plan in place to involve healthcare providers in the implementation of new eHealth/telehealth interventions",likert_1_5,
+ADB,Societal Readiness,Communication with other organizations,ADB_SR_COM_1,statement,,"Staff regularly uses ICT/internet to communicate with staff at the other health institutions of the region",likert_1_5,
+ADB,Societal Readiness,Communication with other organizations,ADB_SR_COM_2,statement,,"Staff regularly uses ICT/internet to communicate with local community and clients",likert_1_5,
+ADB,Societal Readiness,Communication with other organizations,ADB_SR_COM_3,statement,,"Other institutions involved in the eHealth/telehealth project have also planned to go through e-readiness assessment",likert_1_5,
+ADB,Societal Readiness,Sharing of locally relevant content between healthcare institutions,ADB_SR_SH_1,statement,,"Material on locally relevant health issues is shared between this institution and other institutions",likert_1_5,[For e-learning projects]
+ADB,Societal Readiness,Sharing of locally relevant content between healthcare institutions,ADB_SR_SH_2,statement,,"The relevant material is available in language(s) that is easily understood by all the concerned staff and other users of information",likert_1_5,[For e-learning projects]
+ADB,Societal Readiness,Providing care to patients and communities,ADB_SR_PC_1,statement,,"A referral system is available between this institution and other healthcare institutions to provide patient care in certain specialties",likert_1_5,[For service-related projects]
+ADB,Societal Readiness,Providing care to patients and communities,ADB_SR_PC_2,statement,,"ICT is currently used for referrals between this institution and other healthcare institutions",likert_1_5,[For service-related projects]
+ADB,Societal Readiness,Considering sociocultural factors among staff,ADB_SR_SCF_1,statement,,"Both the genders have equal and unrestricted access to the technology",likert_1_5,
+ADB,Societal Readiness,Considering sociocultural factors among staff,ADB_SR_SCF_2,statement,,"Staff from all levels get direct benefit from the use of technology",likert_1_5,
+ADB,Societal Readiness,Considering sociocultural factors among clients and communities,ADB_SR_SCC_1,statement,,"Use of ICT will benefit men and women equally in the society",likert_1_5,
+ADB,Societal Readiness,Considering sociocultural factors among clients and communities,ADB_SR_SCC_2,statement,,"People from all socioeconomic strata get direct benefit from the use of technology",likert_1_5,
+ADB,Societal Readiness,ICT related regulations,ADB_SR_REG_1,statement,,"Government policies are in place to promote and manage use of eHealth/telehealth in healthcare institutions",likert_1_5,
+ADB,Societal Readiness,ICT related regulations,ADB_SR_REG_2,statement,,"Institutional policies are in place to promote and manage use of eHealth/telehealth in your institution",likert_1_5,
+ADB,Societal Readiness,Policies regarding licensing and liability,ADB_SR_LL_1,statement,,"Government policies are in place to allow care provision in other jurisdictions through telehealth",likert_1_5,
+ADB,Societal Readiness,Policies regarding licensing and liability,ADB_SR_LL_2,statement,,"Institutional policies are in place to allow care provision in other jurisdictions through telehealth",likert_1_5,
+ADB,Societal Readiness,Policies regarding licensing and liability,ADB_SR_LL_3,statement,,"Government policies are in place to deal with liability issues",likert_1_5,
+ADB,Societal Readiness,Policies regarding licensing and liability,ADB_SR_LL_4,statement,,"Institutional policies are in place to deal with liability issues",likert_1_5,
+ADB,Societal Readiness,Policies regarding reimbursement,ADB_SR_PR_1,statement,,"Government policies are in place to ensure proper reimbursement to the healthcare providers in your institution",likert_1_5,
+ADB,Societal Readiness,Policies regarding reimbursement,ADB_SR_PR_2,statement,,"Institutional policies are in place to ensure proper reimbursement to the healthcare providers in your institution",likert_1_5,
+ADB,Societal Readiness,Policies regarding system interoperability,ADB_SR_PSI_1,statement,,"Government policies are in place to ensure/specify interoperability standards and system requirements",likert_1_5,
+ADB,Societal Readiness,Awareness and support of ICT among politicians,ADB_SR_ASP_1,statement,,"Politicians are generally aware of the benefits of ICT use in healthcare",likert_1_5,
+ADB,Societal Readiness,Awareness and support of ICT among politicians,ADB_SR_ASP_2,statement,,"Politicians generally support the use of ICT use in healthcare",likert_1_5,
+ADB,Societal Readiness,Awareness and support of ICT among policymakers,ADB_SR_ASPM_1,statement,,"Policy makers are aware of the benefits of ICT in healthcare institutions",likert_1_5,
+ADB,Societal Readiness,Awareness and support of ICT among policymakers,ADB_SR_ASPM_2,statement,,"Policy makers support the use of ICT in healthcare institutions",likert_1_5,
