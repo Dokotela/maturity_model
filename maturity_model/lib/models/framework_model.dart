@@ -2,10 +2,10 @@
 
 /// Enum for all available framework types
 enum FrameworkType {
-  is4hInstitutional('IS4H Institutional', 'is4h_inst'),
+  is4hInstitutional('IS4H Institutional', 'is4h_institute'),
   is4hCountry('IS4H Country', 'is4h_country'),
-  eccmFacility('ECCM Facility', 'eccm_f'),
-  eccmOrganization('ECCM Organization', 'eccm_o'),
+  eccmFacility('ECCM Facility', 'eccm_facility'),
+  eccmOrganization('ECCM Organization', 'eccm_organization'),
   bpmn('BPMN', 'bpmn'),
   adb('ADB', 'adb');
 

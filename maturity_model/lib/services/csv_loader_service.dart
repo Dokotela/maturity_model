@@ -39,11 +39,11 @@ class CsvLoaderService {
       case FrameworkType.adb:
         return await _loadStandardFramework('adb.csv', type);
       case FrameworkType.eccmFacility:
-        return await _loadStandardFramework('eccm_f.csv', type);
+        return await _loadStandardFramework('eccm_facility.csv', type);
       case FrameworkType.eccmOrganization:
-        return await _loadStandardFramework('eccm_o.csv', type);
+        return await _loadStandardFramework('eccm_organization.csv', type);
       case FrameworkType.is4hInstitutional:
-        return await _loadIs4hFramework(type, 'inst');
+        return await _loadIs4hFramework(type, 'institute');
       case FrameworkType.is4hCountry:
         return await _loadIs4hFramework(type, 'country');
     }
@@ -55,7 +55,7 @@ class CsvLoaderService {
     FrameworkType type,
   ) async {
     try {
-      final csvString = await rootBundle.loadString('assets/data/$fileName');
+      final csvString = await rootBundle.loadString('csv/$fileName');
       final List<List<dynamic>> csvTable = const CsvToListConverter().convert(
         csvString,
       );
@@ -122,7 +122,7 @@ class CsvLoaderService {
       final fileName = 'is4h_${level}_$domainFile.csv';
 
       try {
-        final csvString = await rootBundle.loadString('assets/data/$fileName');
+        final csvString = await rootBundle.loadString('csv//$fileName');
         final List<List<dynamic>> csvTable = const CsvToListConverter().convert(
           csvString,
         );
@@ -200,7 +200,7 @@ class CsvLoaderService {
       ];
 
       // Load the CSV to get the descriptions
-      final csvString = await rootBundle.loadString('assets/data/bpmn.csv');
+      final csvString = await rootBundle.loadString('csv/bpmn.csv');
       final List<List<dynamic>> csvTable = const CsvToListConverter().convert(
         csvString,
       );
