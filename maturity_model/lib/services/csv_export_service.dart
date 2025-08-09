@@ -1,5 +1,7 @@
 // lib/services/csv_export_service.dart
 
+// ignore_for_file: avoid_print
+
 import 'package:csv/csv.dart';
 import 'package:maturity_model/maturity_model.dart'
     show AssessmentSession, FrameworkType, CsvLoaderService;

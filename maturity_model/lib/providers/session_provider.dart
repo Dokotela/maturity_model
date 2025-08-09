@@ -1,5 +1,7 @@
 // lib/providers/session_provider.dart
 
+// ignore_for_file: avoid_print
+
 import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:maturity_model/maturity_model.dart'

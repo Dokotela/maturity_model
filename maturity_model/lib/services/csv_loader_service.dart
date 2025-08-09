@@ -1,8 +1,11 @@
 // lib/services/csv_loader_service.dart
 
+// ignore_for_file: avoid_print
+
 import 'package:flutter/services.dart';
 import 'package:csv/csv.dart';
-import '../models/framework_model.dart';
+import 'package:maturity_model/maturity_model.dart'
+    show FrameworkType, Framework, AssessmentItem, Domain, Subdomain;
 
 class CsvLoaderService {
   static final CsvLoaderService _instance = CsvLoaderService._internal();
@@ -81,8 +84,7 @@ class CsvLoaderService {
           domain: domain,
           subdomain: subdomain,
           itemType: row['item_type']?.toString() ?? 'question',
-          questionText:
-              row['question_text']?.toString() ??
+          questionText: row['question_text']?.toString() ??
               row['text_english']?.toString() ??
               '',
           maturityLevel: _parseMaturityLevel(row['maturity_level']),
@@ -150,8 +152,7 @@ class CsvLoaderService {
             domain: mainDomain,
             subdomain: subdomain,
             itemType: row['item_type']?.toString() ?? 'question',
-            questionText:
-                row['question_text']?.toString() ??
+            questionText: row['question_text']?.toString() ??
                 row['text_english']?.toString() ??
                 '',
             maturityLevel: _parseMaturityLevel(row['maturity_level']),

@@ -2,15 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:maturity_model/maturity_model.dart'
-    show
-        FrameworkType,
-        Framework,
-        Domain,
-        AssessmentItem,
-        frameworkProvider,
-        frameworkCompletionProvider,
-        sessionProvider;
+import 'package:maturity_model/maturity_model.dart';
 
 class AssessmentScreen extends ConsumerStatefulWidget {
   final FrameworkType frameworkType;
@@ -27,7 +19,6 @@ class AssessmentScreen extends ConsumerStatefulWidget {
 class _AssessmentScreenState extends ConsumerState<AssessmentScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  int _expandedDomainIndex = 0;
 
   @override
   void initState() {
@@ -153,7 +144,6 @@ class _AssessmentScreenState extends ConsumerState<AssessmentScreen>
         ...domain.subdomains.asMap().entries.map((entry) {
           final index = entry.key;
           final subdomain = entry.value;
-          final isExpanded = _expandedDomainIndex == index;
 
           return Card(
             margin: const EdgeInsets.only(bottom: 8),
@@ -180,9 +170,7 @@ class _AssessmentScreenState extends ConsumerState<AssessmentScreen>
                 ),
               ),
               onExpansionChanged: (expanded) {
-                if (expanded) {
-                  setState(() => _expandedDomainIndex = index);
-                }
+                // Can track expansion state if needed later
               },
               children: subdomain.items
                   .map(
@@ -251,7 +239,7 @@ class _AssessmentScreenState extends ConsumerState<AssessmentScreen>
 
           return Card(
             color: isSelected
-                ? Theme.of(context).primaryColor.withOpacity(0.1)
+                ? Theme.of(context).primaryColor.withValues(alpha: 0.1)
                 : null,
             child: InkWell(
               onTap: () {

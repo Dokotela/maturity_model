@@ -21,7 +21,7 @@ class Framework {
   final String name;
   final String description;
   final List<Domain> domains;
-  final DateTime lastModified;
+  DateTime lastModified;
 
   Framework({
     required this.type,
@@ -76,7 +76,11 @@ class Domain {
   final String name;
   final List<Subdomain> subdomains;
 
-  Domain({required this.id, required this.name, required this.subdomains});
+  Domain({
+    required this.id,
+    required this.name,
+    required this.subdomains,
+  });
 
   /// Calculate average score for this domain (for spider graphs)
   double get averageScore {
@@ -114,7 +118,11 @@ class Subdomain {
   final String name;
   final List<AssessmentItem> items;
 
-  Subdomain({required this.id, required this.name, required this.items});
+  Subdomain({
+    required this.id,
+    required this.name,
+    required this.items,
+  });
 
   /// Calculate average score for this subdomain
   double get averageScore {
@@ -172,8 +180,7 @@ class AssessmentItem {
       domain: row['domain']?.toString() ?? '',
       subdomain: row['subdomain']?.toString() ?? '',
       itemType: row['item_type']?.toString() ?? '',
-      questionText:
-          row['question_text']?.toString() ??
+      questionText: row['question_text']?.toString() ??
           row['text_english']?.toString() ??
           '',
       maturityLevel: _parseMaturityLevel(row['maturity_level']),
@@ -237,11 +244,11 @@ class AssessmentSession {
     this.location,
     this.additionalNotes,
     Map<FrameworkType, Framework>? frameworks,
-  }) : sessionId =
-           sessionId ?? DateTime.now().millisecondsSinceEpoch.toString(),
-       createdAt = createdAt ?? DateTime.now(),
-       lastModified = DateTime.now(),
-       frameworks = frameworks ?? {};
+  })  : sessionId =
+            sessionId ?? DateTime.now().millisecondsSinceEpoch.toString(),
+        createdAt = createdAt ?? DateTime.now(),
+        lastModified = DateTime.now(),
+        frameworks = frameworks ?? {};
 
   /// Get overall progress across all frameworks
   Map<FrameworkType, double> get progressByFramework {
@@ -320,7 +327,10 @@ class SpiderGraphConfig {
   final FrameworkType framework;
   final List<SpiderGraphDomain> domains;
 
-  const SpiderGraphConfig({required this.framework, required this.domains});
+  const SpiderGraphConfig({
+    required this.framework,
+    required this.domains,
+  });
 }
 
 class SpiderGraphDomain {
@@ -341,33 +351,23 @@ const Map<FrameworkType, SpiderGraphConfig> spiderConfigs = {
     framework: FrameworkType.bpmn,
     domains: [
       SpiderGraphDomain(
-        name: 'institutional_standards',
-        displayName: 'Institutional Standards/Guidelines/Policies',
-      ),
+          name: 'institutional_standards',
+          displayName: 'Institutional Standards/Guidelines/Policies'),
       SpiderGraphDomain(
-        name: 'stakeholder_management',
-        displayName: 'Stakeholder Management',
-      ),
+          name: 'stakeholder_management',
+          displayName: 'Stakeholder Management'),
       SpiderGraphDomain(
-        name: 'adoption_processes',
-        displayName: 'Adoption Processes',
-      ),
+          name: 'adoption_processes', displayName: 'Adoption Processes'),
       SpiderGraphDomain(
-        name: 'privacy_security',
-        displayName: 'Privacy, Security, Confidentiality',
-      ),
+          name: 'privacy_security',
+          displayName: 'Privacy, Security, Confidentiality'),
       SpiderGraphDomain(
-        name: 'skills_expertise',
-        displayName: 'Skills and Expertise',
-      ),
+          name: 'skills_expertise', displayName: 'Skills and Expertise'),
       SpiderGraphDomain(
-        name: 'knowledge_assets',
-        displayName: 'Knowledge Assets, Tools and Automation',
-      ),
+          name: 'knowledge_assets',
+          displayName: 'Knowledge Assets, Tools and Automation'),
       SpiderGraphDomain(
-        name: 'goals_measurement',
-        displayName: 'Goals and Measurement',
-      ),
+          name: 'goals_measurement', displayName: 'Goals and Measurement'),
     ],
   ),
 
@@ -375,29 +375,19 @@ const Map<FrameworkType, SpiderGraphConfig> spiderConfigs = {
     framework: FrameworkType.eccmFacility,
     domains: [
       SpiderGraphDomain(
-        name: 'hit_learning',
-        displayName: 'HIT Learning Health System',
-      ),
+          name: 'hit_learning', displayName: 'HIT Learning Health System'),
       SpiderGraphDomain(
-        name: 'interoperability',
-        displayName: 'Interoperability',
-      ),
+          name: 'interoperability', displayName: 'Interoperability'),
       SpiderGraphDomain(
-        name: 'patient_centered',
-        displayName: 'Patient Centeredness',
-      ),
+          name: 'patient_centered', displayName: 'Patient Centeredness'),
       SpiderGraphDomain(
-        name: 'tech_resources',
-        displayName: 'Management of Technical Resources',
-      ),
+          name: 'tech_resources',
+          displayName: 'Management of Technical Resources'),
       SpiderGraphDomain(
-        name: 'data_quality',
-        displayName: 'Data Ownership and Data Quality',
-      ),
+          name: 'data_quality', displayName: 'Data Ownership and Data Quality'),
       SpiderGraphDomain(
-        name: 'analytics',
-        displayName: 'Analytics and Business Intelligence',
-      ),
+          name: 'analytics',
+          displayName: 'Analytics and Business Intelligence'),
     ],
   ),
 
@@ -405,29 +395,19 @@ const Map<FrameworkType, SpiderGraphConfig> spiderConfigs = {
     framework: FrameworkType.eccmOrganization,
     domains: [
       SpiderGraphDomain(
-        name: 'hit_learning',
-        displayName: 'HIT Learning Health System',
-      ),
+          name: 'hit_learning', displayName: 'HIT Learning Health System'),
       SpiderGraphDomain(
-        name: 'interoperability',
-        displayName: 'Interoperability',
-      ),
+          name: 'interoperability', displayName: 'Interoperability'),
       SpiderGraphDomain(
-        name: 'patient_centered',
-        displayName: 'Patient Centeredness',
-      ),
+          name: 'patient_centered', displayName: 'Patient Centeredness'),
       SpiderGraphDomain(
-        name: 'tech_resources',
-        displayName: 'Management of Technical Resources',
-      ),
+          name: 'tech_resources',
+          displayName: 'Management of Technical Resources'),
       SpiderGraphDomain(
-        name: 'data_quality',
-        displayName: 'Data Ownership and Data Quality',
-      ),
+          name: 'data_quality', displayName: 'Data Ownership and Data Quality'),
       SpiderGraphDomain(
-        name: 'analytics',
-        displayName: 'Analytics and Business Intelligence',
-      ),
+          name: 'analytics',
+          displayName: 'Analytics and Business Intelligence'),
     ],
   ),
 
