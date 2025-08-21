@@ -1,10 +1,8 @@
 // lib/services/csv_export_service.dart
 
-// ignore_for_file: avoid_print
-
 import 'package:csv/csv.dart';
 import 'package:maturity_model/maturity_model.dart'
-    show AssessmentSession, FrameworkType, CsvLoaderService;
+    show FrameworkType, CsvLoaderService, AssessmentSession;
 
 class CsvExportService {
   static final CsvExportService _instance = CsvExportService._internal();
@@ -29,7 +27,7 @@ class CsvExportService {
       'organization',
       'assessor',
       'location',
-      'notes',
+      'notes'
     ]);
 
     // Add metadata row
@@ -83,9 +81,8 @@ class CsvExportService {
   /// Import session data from CSV string
   Future<AssessmentSession?> importSessionFromCsv(String csvContent) async {
     try {
-      final List<List<dynamic>> csvTable = const CsvToListConverter().convert(
-        csvContent,
-      );
+      final List<List<dynamic>> csvTable =
+          const CsvToListConverter().convert(csvContent);
 
       if (csvTable.isEmpty) return null;
 
@@ -139,7 +136,9 @@ class CsvExportService {
         }
       }
 
-      session ??= AssessmentSession();
+      if (session == null) {
+        session = AssessmentSession();
+      }
 
       // Load frameworks and apply responses
       final loader = CsvLoaderService();
@@ -159,9 +158,8 @@ class CsvExportService {
                       item.response = itemResponse['response'] as int?;
                       item.comment = itemResponse['comment'] as String?;
                       if (itemResponse['timestamp'] != null) {
-                        item.responseTimestamp = DateTime.tryParse(
-                          itemResponse['timestamp'],
-                        );
+                        item.responseTimestamp =
+                            DateTime.tryParse(itemResponse['timestamp']);
                       }
                     }
                   }

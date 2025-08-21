@@ -18,17 +18,17 @@ class AssessmentScreen extends ConsumerStatefulWidget {
 
 class _AssessmentScreenState extends ConsumerState<AssessmentScreen>
     with SingleTickerProviderStateMixin {
-  late TabController _tabController;
+  TabController? _tabController;
 
   @override
   void initState() {
     super.initState();
-    // Initialize tab controller will be set after build when we know domain count
+    // Tab controller will be initialized in build when we know domain count
   }
 
   @override
   void dispose() {
-    _tabController.dispose();
+    _tabController?.dispose();
     super.dispose();
   }
 
@@ -36,19 +36,30 @@ class _AssessmentScreenState extends ConsumerState<AssessmentScreen>
   Widget build(BuildContext context) {
     final framework = ref.watch(frameworkProvider(widget.frameworkType));
 
-    if (framework == null) {
+    if (framework == null || framework.domains.isEmpty) {
       return Scaffold(
         appBar: AppBar(
           title: Text(widget.frameworkType.displayName),
         ),
-        body: const Center(
-          child: CircularProgressIndicator(),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const CircularProgressIndicator(),
+              const SizedBox(height: 16),
+              Text(framework == null
+                  ? 'Loading framework...'
+                  : 'No data found for this framework'),
+            ],
+          ),
         ),
       );
     }
 
     // Initialize tab controller with correct length
-    if (!mounted || _tabController.length != framework.domains.length) {
+    if (_tabController == null ||
+        _tabController!.length != framework.domains.length) {
+      _tabController?.dispose();
       _tabController = TabController(
         length: framework.domains.length,
         vsync: this,
@@ -77,7 +88,7 @@ class _AssessmentScreenState extends ConsumerState<AssessmentScreen>
         ),
         bottom: framework.domains.length > 1
             ? TabBar(
-                controller: _tabController,
+                controller: _tabController!,
                 isScrollable: true,
                 tabs: framework.domains
                     .map(
@@ -89,7 +100,7 @@ class _AssessmentScreenState extends ConsumerState<AssessmentScreen>
       ),
       body: framework.domains.length > 1
           ? TabBarView(
-              controller: _tabController,
+              controller: _tabController!,
               children: framework.domains
                   .map(
                     (domain) => _buildDomainView(domain, framework),

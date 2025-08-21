@@ -1,4 +1,5 @@
 // lib/services/csv_loader_service.dart
+// VERSION FOR CLEANED/STANDARDIZED CSV FILES
 
 // ignore_for_file: avoid_print
 
@@ -16,15 +17,16 @@ class CsvLoaderService {
   Future<Map<FrameworkType, Framework>> loadAllFrameworks() async {
     final Map<FrameworkType, Framework> frameworks = {};
 
-    // Load each framework type
     for (final frameworkType in FrameworkType.values) {
       try {
         final framework = await loadFramework(frameworkType);
         if (framework != null) {
           frameworks[frameworkType] = framework;
+          print(
+              '✓ Loaded ${frameworkType.displayName}: ${framework.domains.length} domains');
         }
       } catch (e) {
-        print('Error loading framework ${frameworkType.name}: $e');
+        print('✗ Error loading ${frameworkType.displayName}: $e');
       }
     }
 
@@ -34,38 +36,127 @@ class CsvLoaderService {
   /// Load a specific framework
   Future<Framework?> loadFramework(FrameworkType type) async {
     switch (type) {
-      case FrameworkType.bpmn:
-        return await _loadBpmnFramework();
-      case FrameworkType.adb:
-        return await _loadStandardFramework('adb.csv', type);
-      case FrameworkType.eccmFacility:
-        return await _loadStandardFramework('eccm_facility.csv', type);
-      case FrameworkType.eccmOrganization:
-        return await _loadStandardFramework('eccm_organization.csv', type);
       case FrameworkType.is4hInstitutional:
         return await _loadIs4hFramework(type, 'institute');
       case FrameworkType.is4hCountry:
         return await _loadIs4hFramework(type, 'country');
+      case FrameworkType.eccmFacility:
+        return await _loadStandardFramework('eccm_facility.csv', type);
+      case FrameworkType.eccmOrganization:
+        return await _loadStandardFramework('eccm_organization.csv', type);
+      case FrameworkType.bpmn:
+        return await _loadBpmnFramework();
+      case FrameworkType.adb:
+        return await _loadStandardFramework('adb.csv', type);
     }
   }
 
-  /// Load standard question-based frameworks (ADB, ECCM)
+  /// Load IS4H frameworks (now with consolidated maturity questions)
+  Future<Framework?> _loadIs4hFramework(
+      FrameworkType type, String level) async {
+    final Map<String, Map<String, List<AssessmentItem>>> allData = {};
+    final domainFiles = ['dmit', 'mago', 'kmsh', 'inno'];
+
+    for (final domainFile in domainFiles) {
+      final fileName = 'is4h_${level}_$domainFile.csv';
+
+      try {
+        final csvString = await rootBundle.loadString('assets/csv/$fileName');
+        final List<List<dynamic>> csvTable =
+            const CsvToListConverter().convert(csvString);
+
+        if (csvTable.isEmpty) continue;
+
+        final headers = csvTable[0].map((e) => e.toString().trim()).toList();
+        final mainDomain = _getIs4hDomainName(domainFile);
+        allData[mainDomain] ??= {};
+
+        for (int i = 1; i < csvTable.length; i++) {
+          final Map<String, dynamic> row = {};
+          for (int j = 0; j < headers.length && j < csvTable[i].length; j++) {
+            row[headers[j]] = csvTable[i][j];
+          }
+
+          final itemType = row['item_type']?.toString() ?? '';
+
+          // Skip headings and subheadings
+          if (itemType == 'heading' || itemType == 'subheading') {
+            continue;
+          }
+
+          final subdomain = row['subdomain']?.toString() ?? 'General';
+          allData[mainDomain]![subdomain] ??= [];
+
+          // Handle maturity questions (consolidated format)
+          if (itemType == 'maturity_question') {
+            // Build maturity descriptions map
+            final maturityDescriptions = <int, String>{};
+            for (int level = 1; level <= 5; level++) {
+              final description = row['maturity_$level']?.toString() ?? '';
+              if (description.isNotEmpty) {
+                maturityDescriptions[level] = description;
+              }
+            }
+
+            final item = AssessmentItem(
+              id: row['item_id']?.toString() ?? '',
+              frameworkId: type.filePrefix,
+              domain: mainDomain,
+              subdomain: subdomain,
+              itemType: 'maturity_scale',
+              questionText: row['question_text']?.toString() ?? '',
+              maturityDescriptions: maturityDescriptions,
+              responseType: row['response_type']?.toString() ?? 'scale',
+              scoringNote: row['scoring_note']?.toString(),
+            );
+
+            allData[mainDomain]![subdomain]!.add(item);
+          } else if (itemType == 'question') {
+            // Regular question without maturity levels
+            final item = AssessmentItem(
+              id: row['item_id']?.toString() ?? '',
+              frameworkId: type.filePrefix,
+              domain: mainDomain,
+              subdomain: subdomain,
+              itemType: 'question',
+              questionText: row['question_text']?.toString() ??
+                  row['text_english']?.toString() ??
+                  '',
+              responseType: row['response_type']?.toString() ?? 'scale',
+              scoringNote: row['scoring_note']?.toString(),
+            );
+
+            allData[mainDomain]![subdomain]!.add(item);
+          }
+        }
+      } catch (e) {
+        print('Error loading $fileName: $e');
+      }
+    }
+
+    final domains = _createDomainsFromGroupedData(allData);
+
+    return Framework(
+      type: type,
+      name: type.displayName,
+      description: _getFrameworkDescription(type),
+      domains: domains,
+    );
+  }
+
+  /// Load standard frameworks (ECCM, ADB)
   Future<Framework?> _loadStandardFramework(
-    String fileName,
-    FrameworkType type,
-  ) async {
+      String fileName, FrameworkType type) async {
     try {
-      final csvString = await rootBundle.loadString('csv/$fileName');
-      final List<List<dynamic>> csvTable = const CsvToListConverter().convert(
-        csvString,
-      );
+      final csvString = await rootBundle.loadString('assets/csv/$fileName');
+      final List<List<dynamic>> csvTable =
+          const CsvToListConverter().convert(csvString);
 
       if (csvTable.isEmpty) return null;
 
       final headers = csvTable[0].map((e) => e.toString().trim()).toList();
       final Map<String, Map<String, List<AssessmentItem>>> groupedData = {};
 
-      // Process each row
       for (int i = 1; i < csvTable.length; i++) {
         final Map<String, dynamic> row = {};
         for (int j = 0; j < headers.length && j < csvTable[i].length; j++) {
@@ -79,7 +170,7 @@ class CsvLoaderService {
         groupedData[domain]![subdomain] ??= [];
 
         final item = AssessmentItem(
-          id: '${type.filePrefix}_${row['item_id'] ?? i}',
+          id: row['item_id']?.toString() ?? '',
           frameworkId: type.filePrefix,
           domain: domain,
           subdomain: subdomain,
@@ -95,7 +186,6 @@ class CsvLoaderService {
         groupedData[domain]![subdomain]!.add(item);
       }
 
-      // Convert grouped data to Domain structure
       final domains = _createDomainsFromGroupedData(groupedData);
 
       return Framework(
@@ -110,165 +200,65 @@ class CsvLoaderService {
     }
   }
 
-  /// Load IS4H frameworks (combines multiple CSV files)
-  Future<Framework?> _loadIs4hFramework(
-    FrameworkType type,
-    String level,
-  ) async {
-    final Map<String, Map<String, List<AssessmentItem>>> allData = {};
-    final domainFiles = ['dmit', 'mago', 'kmsh', 'inno'];
-
-    for (final domainFile in domainFiles) {
-      final fileName = 'is4h_${level}_$domainFile.csv';
-
-      try {
-        final csvString = await rootBundle.loadString('csv//$fileName');
-        final List<List<dynamic>> csvTable = const CsvToListConverter().convert(
-          csvString,
-        );
-
-        if (csvTable.isEmpty) continue;
-
-        final headers = csvTable[0].map((e) => e.toString().trim()).toList();
-
-        // Get the main domain name from the spider config
-        final mainDomain = _getIs4hDomainName(domainFile);
-        allData[mainDomain] ??= {};
-
-        // Process each row
-        for (int i = 1; i < csvTable.length; i++) {
-          final Map<String, dynamic> row = {};
-          for (int j = 0; j < headers.length && j < csvTable[i].length; j++) {
-            row[headers[j]] = csvTable[i][j];
-          }
-
-          final subdomain = row['subdomain']?.toString() ?? 'General';
-
-          allData[mainDomain]![subdomain] ??= [];
-
-          final item = AssessmentItem(
-            id: '${type.filePrefix}_${domainFile}_${row['item_id'] ?? i}',
-            frameworkId: type.filePrefix,
-            domain: mainDomain,
-            subdomain: subdomain,
-            itemType: row['item_type']?.toString() ?? 'question',
-            questionText: row['question_text']?.toString() ??
-                row['text_english']?.toString() ??
-                '',
-            maturityLevel: _parseMaturityLevel(row['maturity_level']),
-            responseType: row['response_type']?.toString() ?? 'scale',
-            scoringNote: row['scoring_note']?.toString(),
-          );
-
-          allData[mainDomain]![subdomain]!.add(item);
-        }
-      } catch (e) {
-        print('Error loading $fileName: $e');
-      }
-    }
-
-    // Convert to Domain structure
-    final domains = _createDomainsFromGroupedData(allData);
-
-    return Framework(
-      type: type,
-      name: type.displayName,
-      description: _getFrameworkDescription(type),
-      domains: domains,
-    );
-  }
-
   /// Load BPMN framework (special rubric format)
   Future<Framework?> _loadBpmnFramework() async {
     try {
-      // For BPMN, we need to restructure the data differently
-      // Each domain gets one item per maturity level
-      final domains = <Domain>[];
+      final csvString = await rootBundle.loadString('assets/csv/bpmn.csv');
+      final List<List<dynamic>> csvTable =
+          const CsvToListConverter().convert(csvString);
 
-      // BPMN domains from the spider config
-      final bpmnDomains = [
-        (
-          'institutional_standards',
-          'Institutional Standards/Guidelines/Policies',
-        ),
-        ('stakeholder_management', 'Stakeholder Management'),
-        ('adoption_processes', 'Adoption Processes'),
-        ('privacy_security', 'Privacy, Security, Confidentiality'),
-        ('skills_expertise', 'Skills and Expertise'),
-        ('knowledge_assets', 'Knowledge Assets, Tools and Automation'),
-        ('goals_measurement', 'Goals and Measurement'),
-      ];
+      if (csvTable.isEmpty) return null;
 
-      // Load the CSV to get the descriptions
-      final csvString = await rootBundle.loadString('csv/bpmn.csv');
-      final List<List<dynamic>> csvTable = const CsvToListConverter().convert(
-        csvString,
-      );
+      final headers = csvTable[0].map((e) => e.toString().trim()).toList();
 
-      Map<String, Map<int, String>> descriptions = {};
+      // Group by domain to create rubric items
+      final Map<String, Map<int, String>> domainDescriptions = {};
 
-      if (csvTable.isNotEmpty) {
-        final headers = csvTable[0].map((e) => e.toString().trim()).toList();
+      for (int i = 1; i < csvTable.length; i++) {
+        final Map<String, dynamic> row = {};
+        for (int j = 0; j < headers.length && j < csvTable[i].length; j++) {
+          row[headers[j]] = csvTable[i][j];
+        }
 
-        // Process the CSV to extract descriptions for each domain and level
-        for (int i = 1; i < csvTable.length; i++) {
-          final Map<String, dynamic> row = {};
-          for (int j = 0; j < headers.length && j < csvTable[i].length; j++) {
-            row[headers[j]] = csvTable[i][j];
-          }
+        final domain = row['domain']?.toString();
+        final itemType = row['item_type']?.toString();
+        final maturityLevel = _parseMaturityLevel(row['maturity_level']);
+        final description = row['text_english']?.toString() ?? '';
 
-          final domain = row['domain']?.toString();
-          final maturityLevel = _parseMaturityLevel(row['maturity_level']);
-          final description = row['text_english']?.toString() ?? '';
-
-          if (domain != null && domain.isNotEmpty) {
-            descriptions[domain] ??= {};
-            descriptions[domain]![maturityLevel] = description;
-          }
+        if (domain != null && domain != 'General' && itemType == 'assessment') {
+          domainDescriptions[domain] ??= {};
+          domainDescriptions[domain]![maturityLevel ?? 1] = description;
         }
       }
 
-      // Create domains with special BPMN structure
-      for (final (id, displayName) in bpmnDomains) {
-        final items = <AssessmentItem>[];
+      // Create domains with rubric items
+      final domains = <Domain>[];
 
-        // Create a single item that represents all maturity levels for this domain
-        // The question text will contain all level descriptions
-        final domainDescriptions =
-            descriptions[displayName] ?? descriptions[id] ?? {};
+      for (final entry in domainDescriptions.entries) {
+        final domainName = entry.key;
+        final descriptions = entry.value;
 
-        // Create a comprehensive question that includes all levels
-        final questionText = StringBuffer(
-          'Select your organization\'s maturity level:\n\n',
-        );
-        for (int level = 1; level <= 5; level++) {
-          final desc = domainDescriptions[level] ?? 'Level $level';
-          questionText.writeln('Level $level: $desc\n');
-        }
-
-        items.add(
-          AssessmentItem(
-            id: 'bpmn_$id',
-            frameworkId: 'bpmn',
-            domain: displayName,
-            subdomain: 'Assessment',
-            itemType: 'rubric',
-            questionText: questionText.toString(),
-            maturityLevel: 1, // Default to 1
-            responseType: 'maturity_level',
-            scoringNote: 'Select a maturity level from 1-5',
-          ),
+        final item = AssessmentItem(
+          id: 'bpmn_${domainName.toLowerCase().replaceAll(' ', '_').replaceAll('/', '_')}',
+          frameworkId: 'bpmn',
+          domain: domainName,
+          subdomain: 'Assessment',
+          itemType: 'rubric',
+          questionText:
+              'Select the maturity level that best describes your organization',
+          maturityDescriptions: descriptions,
+          responseType: 'maturity_level',
         );
 
         domains.add(
           Domain(
-            id: id,
-            name: displayName,
+            id: domainName.toLowerCase().replaceAll(' ', '_'),
+            name: domainName,
             subdomains: [
               Subdomain(
-                id: '${id}_assessment',
-                name: 'Assessment',
-                items: items,
+                id: '${domainName.toLowerCase().replaceAll(' ', '_')}_assessment',
+                name: 'Maturity Assessment',
+                items: [item],
               ),
             ],
           ),
@@ -282,15 +272,14 @@ class CsvLoaderService {
         domains: domains,
       );
     } catch (e) {
-      print('Error loading BPMN framework: $e');
+      print('Error loading BPMN: $e');
       return null;
     }
   }
 
   /// Helper to create domains from grouped data
   List<Domain> _createDomainsFromGroupedData(
-    Map<String, Map<String, List<AssessmentItem>>> groupedData,
-  ) {
+      Map<String, Map<String, List<AssessmentItem>>> groupedData) {
     return groupedData.entries.map((domainEntry) {
       final subdomains = domainEntry.value.entries.map((subdomainEntry) {
         return Subdomain(
@@ -326,57 +315,33 @@ class CsvLoaderService {
     }
   }
 
-  /// Parse maturity level from various formats
-  static int _parseMaturityLevel(dynamic value) {
-    if (value == null) return 1;
+  /// Parse maturity level
+  static int? _parseMaturityLevel(dynamic value) {
+    if (value == null) return null;
     if (value is int) return value;
     if (value is double) return value.round();
     if (value is String) {
       final parsed = double.tryParse(value);
-      return parsed?.round() ?? 1;
+      return parsed?.round();
     }
-    return 1;
+    return null;
   }
 
   /// Get framework description
   String _getFrameworkDescription(FrameworkType type) {
     switch (type) {
       case FrameworkType.is4hInstitutional:
-        return 'Comprehensive maturity assessment for healthcare institutions';
+        return 'Information Systems for Health maturity assessment for healthcare institutions';
       case FrameworkType.is4hCountry:
-        return 'National-level health information systems assessment';
+        return 'Information Systems for Health maturity assessment at country level';
       case FrameworkType.eccmFacility:
-        return 'Essential capabilities for facility-level systems';
+        return 'Essential Care Continuity Maturity Model for healthcare facilities';
       case FrameworkType.eccmOrganization:
-        return 'Essential capabilities for organizational systems';
+        return 'Essential Care Continuity Maturity Model for organizations';
       case FrameworkType.bpmn:
-        return 'Business process maturity assessment using BPMN standards';
+        return 'Business Process Maturity Model for healthcare organizations';
       case FrameworkType.adb:
-        return 'Asian Development Bank digital health readiness framework';
+        return 'Asian Development Bank digital health readiness assessment';
     }
-  }
-
-  /// Map ECCM domains to spider graph categories
-  Map<String, String> getEccmDomainMapping() {
-    return {
-      // You'll need to verify these mappings based on actual CSV content
-      'HIT Infrastructure': 'hit_learning',
-      'Interoperability': 'interoperability',
-      'Patient-Centered Care': 'patient_centered',
-      'Technical Resources': 'tech_resources',
-      'Data Quality': 'data_quality',
-      'Analytics': 'analytics',
-    };
-  }
-
-  /// Map ADB domains to spider graph categories
-  Map<String, String> getAdbDomainMapping() {
-    return {
-      // You'll need to verify these mappings based on actual CSV content
-      'Core': 'core',
-      'Technology': 'tech',
-      'Learning': 'learning',
-      'Society': 'societal',
-    };
   }
 }

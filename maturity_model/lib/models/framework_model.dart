@@ -146,14 +146,18 @@ class AssessmentItem {
   final String frameworkId;
   final String domain;
   final String subdomain;
-  final String itemType;
+  final String
+      itemType; // 'question', 'maturity_scale', 'rubric', 'statement', 'assessment'
   final String questionText;
-  final int maturityLevel;
+  final int? maturityLevel; // For simple items with a single maturity level
   final String responseType;
   final String? scoringNote;
 
+  // For items with multiple maturity level descriptions (IS4H, BPMN)
+  final Map<int, String>? maturityDescriptions;
+
   // User response data
-  int? response; // 1-5 scale
+  int? response; // 1-5 scale or maturity level selected
   String? comment;
   DateTime? responseTimestamp;
 
@@ -164,40 +168,27 @@ class AssessmentItem {
     required this.subdomain,
     required this.itemType,
     required this.questionText,
-    required this.maturityLevel,
+    this.maturityLevel,
     required this.responseType,
     this.scoringNote,
+    this.maturityDescriptions,
     this.response,
     this.comment,
     this.responseTimestamp,
   });
 
-  /// Create from CSV row data
-  factory AssessmentItem.fromCsvRow(Map<String, dynamic> row) {
-    return AssessmentItem(
-      id: row['item_id']?.toString() ?? '',
-      frameworkId: row['framework_id']?.toString() ?? '',
-      domain: row['domain']?.toString() ?? '',
-      subdomain: row['subdomain']?.toString() ?? '',
-      itemType: row['item_type']?.toString() ?? '',
-      questionText: row['question_text']?.toString() ??
-          row['text_english']?.toString() ??
-          '',
-      maturityLevel: _parseMaturityLevel(row['maturity_level']),
-      responseType: row['response_type']?.toString() ?? '',
-      scoringNote: row['scoring_note']?.toString(),
-    );
-  }
+  /// Check if this item has maturity descriptions
+  bool get hasMaturityDescriptions =>
+      maturityDescriptions != null && maturityDescriptions!.isNotEmpty;
 
-  static int _parseMaturityLevel(dynamic value) {
-    if (value == null) return 1;
-    if (value is int) return value;
-    if (value is double) return value.round();
-    if (value is String) {
-      final parsed = double.tryParse(value);
-      return parsed?.round() ?? 1;
-    }
-    return 1;
+  /// Get description for a specific maturity level
+  String? getMaturityDescription(int level) => maturityDescriptions?[level];
+
+  /// Update response
+  void setResponse(int? value, {String? comment}) {
+    response = value;
+    this.comment = comment;
+    responseTimestamp = DateTime.now();
   }
 
   /// Convert to CSV row for export
@@ -211,13 +202,6 @@ class AssessmentItem {
       'comment': comment ?? '',
       'timestamp': responseTimestamp?.toIso8601String() ?? '',
     };
-  }
-
-  /// Update response
-  void setResponse(int? value, {String? comment}) {
-    response = value;
-    this.comment = comment;
-    responseTimestamp = DateTime.now();
   }
 }
 
