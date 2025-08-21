@@ -136,9 +136,7 @@ class CsvExportService {
         }
       }
 
-      if (session == null) {
-        session = AssessmentSession();
-      }
+      session ??= AssessmentSession();
 
       // Load frameworks and apply responses
       final loader = CsvLoaderService();
