@@ -35,6 +35,8 @@ class _AssessmentScreenState extends ConsumerState<AssessmentScreen>
 
   @override
   Widget build(BuildContext context) {
+    // Watch the session to trigger rebuilds on any change
+    ref.watch(sessionProvider);
     final framework = ref.watch(frameworkProvider(widget.frameworkType));
 
     if (framework == null || framework.domains.isEmpty) {
@@ -72,10 +74,6 @@ class _AssessmentScreenState extends ConsumerState<AssessmentScreen>
       });
     }
 
-    final completion =
-        ref.watch(frameworkCompletionProvider(widget.frameworkType));
-    final unanswered = framework.unansweredCount;
-
     return Scaffold(
       appBar: AppBar(
         title: Column(
@@ -86,7 +84,7 @@ class _AssessmentScreenState extends ConsumerState<AssessmentScreen>
               style: const TextStyle(fontSize: 18),
             ),
             Text(
-              '${completion.toStringAsFixed(1)}% Complete • $unanswered questions remaining',
+              _buildProgressText(framework),
               style:
                   const TextStyle(fontSize: 12, fontWeight: FontWeight.normal),
             ),
@@ -110,6 +108,38 @@ class _AssessmentScreenState extends ConsumerState<AssessmentScreen>
             )
           : _buildDomainView(framework.domains.first, framework),
     );
+  }
+
+  String _buildProgressText(Framework framework) {
+    final completion = framework.completionPercentage;
+    final unanswered = framework.unansweredCount;
+
+    // Count total items
+    int totalItems = 0;
+    int answeredItems = 0;
+
+    for (final domain in framework.domains) {
+      for (final subdomain in domain.subdomains) {
+        totalItems += subdomain.items.length;
+        answeredItems += subdomain.items
+            .where((item) => item.response != null && item.response! > 0)
+            .length;
+      }
+    }
+
+    // For debugging - show the actual counts
+    if (widget.frameworkType == FrameworkType.bpmn) {
+      return '$answeredItems of $totalItems answered (${completion.toStringAsFixed(1)}%)';
+    }
+
+    // For other frameworks, show the standard display
+    if (unanswered == 0 && answeredItems < totalItems) {
+      // There's a bug - show the real count
+      final realUnanswered = totalItems - answeredItems;
+      return '${completion.toStringAsFixed(1)}% Complete • $realUnanswered questions remaining';
+    }
+
+    return '${completion.toStringAsFixed(1)}% Complete • $unanswered questions remaining';
   }
 
   // Custom tab bar with better navigation hints
@@ -268,95 +298,178 @@ class _AssessmentScreenState extends ConsumerState<AssessmentScreen>
     );
   }
 
+// Replace the _buildDomainView method in assessment_screen.dart with this complete version:
+
   Widget _buildDomainView(Domain domain, Framework framework) {
     // For BPMN, use special rubric view
     if (widget.frameworkType == FrameworkType.bpmn) {
       return _buildBpmnRubricView(domain, framework);
     }
 
-    // For other frameworks, use standard question view
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        // Domain header
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  domain.name,
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
-                const SizedBox(height: 8),
-                LinearProgressIndicator(
-                  value: domain.averageScore / 5,
-                  backgroundColor: Colors.grey[300],
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    _getColorForScore(domain.averageScore),
+    // For other frameworks, use improved standard question view
+    final scrollController = ScrollController();
+
+    return Scrollbar(
+      controller: scrollController,
+      thumbVisibility: true, // Always show scrollbar
+      child: ListView(
+        controller: scrollController,
+        padding: const EdgeInsets.all(16),
+        children: [
+          // Domain header
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    domain.name,
+                    style: Theme.of(context).textTheme.headlineSmall,
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Average Score: ${domain.averageScore.toStringAsFixed(1)}/5',
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-              ],
+                  const SizedBox(height: 8),
+                  LinearProgressIndicator(
+                    value: domain.averageScore / 5,
+                    backgroundColor: Colors.grey[300],
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      _getColorForScore(domain.averageScore),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Average Score: ${domain.averageScore.toStringAsFixed(1)}/5',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
-        const SizedBox(height: 16),
+          const SizedBox(height: 16),
 
-        // Subdomains with questions
-        ...domain.subdomains.asMap().entries.map((entry) {
-          final index = entry.key;
-          final subdomain = entry.value;
+          // Subdomains with questions
+          ...domain.subdomains.map((subdomain) {
+            // Check if all items in this subdomain are answered
+            final answeredCount = subdomain.items
+                .where((item) => item.response != null && item.response! > 0)
+                .length;
+            final allAnswered = answeredCount == subdomain.items.length &&
+                subdomain.items.isNotEmpty;
 
-          return Card(
-            margin: const EdgeInsets.only(bottom: 8),
-            child: ExpansionTile(
-              initiallyExpanded: index == 0,
-              title: Text(
-                subdomain.name,
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              subtitle: Text(
-                '${subdomain.items.where((i) => i.response != null && i.response! > 0).length}/${subdomain.items.length} answered',
-              ),
-              trailing: CircularProgressIndicator(
-                value: subdomain.items.isEmpty
-                    ? 0
-                    : subdomain.items
-                            .where((i) => i.response != null && i.response! > 0)
-                            .length /
-                        subdomain.items.length,
-                strokeWidth: 3,
-                backgroundColor: Colors.grey[300],
-                valueColor: AlwaysStoppedAnimation<Color>(
-                  _getColorForScore(subdomain.averageScore),
+            return Card(
+              margin: const EdgeInsets.only(bottom: 8),
+              child: Theme(
+                data: Theme.of(context).copyWith(
+                  dividerColor: Colors.transparent,
+                ),
+                child: ExpansionTile(
+                  initiallyExpanded: true,
+                  tilePadding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  childrenPadding: EdgeInsets.zero,
+                  expandedCrossAxisAlignment: CrossAxisAlignment.start,
+                  expandedAlignment: Alignment.topLeft,
+                  leading: allAnswered
+                      ? Icon(
+                          Icons.check_circle,
+                          color: Colors.green,
+                          size: 24,
+                        )
+                      : null, // No icon when incomplete
+                  title: Text(
+                    subdomain.name,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: allAnswered ? Colors.green[700] : null,
+                    ),
+                  ),
+                  subtitle: Text(
+                    '$answeredCount of ${subdomain.items.length} completed',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                  children: subdomain.items
+                      .map((item) => _buildAssessmentItem(item))
+                      .toList(),
                 ),
               ),
-              onExpansionChanged: (expanded) {
-                // Can track expansion state if needed later
-              },
-              children: subdomain.items
-                  .map(
-                    (item) => _buildAssessmentItem(item),
-                  )
-                  .toList(),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAssessmentItem(AssessmentItem item) {
+    final isAnswered = item.response != null && item.response! > 0;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        border: Border(
+          left: BorderSide(
+            color:
+                isAnswered ? Colors.green.withOpacity(0.5) : Colors.transparent,
+            width: 3,
+          ),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Question text - no individual checkmarks
+          Text(
+            item.questionText,
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+          ),
+          const SizedBox(height: 12),
+
+          // Response options based on type
+          if (item.responseType == 'likert_1_5' ||
+              item.responseType == 'maturity_level')
+            _buildLikertScale(item)
+          else if (item.responseType == 'yes_no')
+            _buildYesNoButtons(item)
+          else if (item.responseType == 'yes_no_planning')
+            _buildYesNoPlanningButtons(item)
+          else
+            _buildLikertScale(item), // Default to Likert scale
+
+          // Scoring note if available
+          if (item.scoringNote != null && item.scoringNote!.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(
+              item.scoringNote!,
+              style: TextStyle(
+                fontSize: 12,
+                fontStyle: FontStyle.italic,
+                color: Colors.grey[600],
+              ),
             ),
-          );
-        }),
-      ],
+          ],
+        ],
+      ),
     );
   }
 
   Widget _buildBpmnRubricView(Domain domain, Framework framework) {
-    // Special view for BPMN rubric-style assessment
+    // IMPORTANT: Use the watched framework from the build method, not the passed one
+    final watchedFramework = ref.watch(frameworkProvider(widget.frameworkType));
+
+    if (watchedFramework == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    // Find the current domain in the watched framework
+    final watchedDomain = watchedFramework.domains.firstWhere(
+      (d) => d.id == domain.id,
+      orElse: () => domain,
+    );
+
     return ListView(
       padding: const EdgeInsets.all(16),
-      children: domain.subdomains.expand((subdomain) {
+      children: watchedDomain.subdomains.expand((subdomain) {
         return subdomain.items.map((item) {
           return Card(
             margin: const EdgeInsets.only(bottom: 16),
@@ -486,47 +599,6 @@ class _AssessmentScreenState extends ConsumerState<AssessmentScreen>
           ),
         );
       }),
-    );
-  }
-
-  Widget _buildAssessmentItem(AssessmentItem item) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Question text
-          Text(
-            item.questionText,
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-          ),
-          const SizedBox(height: 12),
-
-          // Response options based on type
-          if (item.responseType == 'likert_1_5' ||
-              item.responseType == 'maturity_level')
-            _buildLikertScale(item)
-          else if (item.responseType == 'yes_no')
-            _buildYesNoButtons(item)
-          else if (item.responseType == 'yes_no_planning')
-            _buildYesNoPlanningButtons(item)
-          else
-            _buildLikertScale(item), // Default to Likert scale
-
-          // Scoring note if available
-          if (item.scoringNote != null && item.scoringNote!.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Text(
-              item.scoringNote!,
-              style: TextStyle(
-                fontSize: 12,
-                fontStyle: FontStyle.italic,
-                color: Colors.grey[600],
-              ),
-            ),
-          ],
-        ],
-      ),
     );
   }
 
