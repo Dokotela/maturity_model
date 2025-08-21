@@ -19,6 +19,7 @@ class AssessmentScreen extends ConsumerStatefulWidget {
 class _AssessmentScreenState extends ConsumerState<AssessmentScreen>
     with SingleTickerProviderStateMixin {
   TabController? _tabController;
+  int _currentTabIndex = 0;
 
   @override
   void initState() {
@@ -64,6 +65,11 @@ class _AssessmentScreenState extends ConsumerState<AssessmentScreen>
         length: framework.domains.length,
         vsync: this,
       );
+      _tabController!.addListener(() {
+        setState(() {
+          _currentTabIndex = _tabController!.index;
+        });
+      });
     }
 
     final completion =
@@ -87,14 +93,9 @@ class _AssessmentScreenState extends ConsumerState<AssessmentScreen>
           ],
         ),
         bottom: framework.domains.length > 1
-            ? TabBar(
-                controller: _tabController!,
-                isScrollable: true,
-                tabs: framework.domains
-                    .map(
-                      (domain) => Tab(text: domain.name),
-                    )
-                    .toList(),
+            ? PreferredSize(
+                preferredSize: const Size.fromHeight(48.0),
+                child: _buildCustomTabBar(framework),
               )
             : null,
       ),
@@ -108,6 +109,162 @@ class _AssessmentScreenState extends ConsumerState<AssessmentScreen>
                   .toList(),
             )
           : _buildDomainView(framework.domains.first, framework),
+    );
+  }
+
+  // Custom tab bar with better navigation hints
+  Widget _buildCustomTabBar(Framework framework) {
+    // Create abbreviated domain names for tabs
+    String _abbreviateDomainName(String name) {
+      // Special abbreviations for known long domain names
+      final abbreviations = {
+        'Institutional Standards/Guidelines/Policies': 'Standards & Policies',
+        'Stakeholder Management': 'Stakeholders',
+        'Adoption Processes': 'Adoption',
+        'Privacy Security Confidentiality': 'Privacy & Security',
+        'Skills and Expertise': 'Skills',
+        'Knowledge Assets Tools and Automation': 'Knowledge & Tools',
+        'Goals and Measurement': 'Goals & Metrics',
+        'Data Management and Information Technology': 'Data & IT',
+        'Management and Governance': 'Management',
+        'Knowledge Management and Sharing': 'Knowledge Sharing',
+        'Innovation': 'Innovation',
+      };
+
+      return abbreviations[name] ?? name;
+    }
+
+    return Container(
+      height: 48,
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            offset: const Offset(0, 2),
+            blurRadius: 4,
+          ),
+        ],
+      ),
+      child: Stack(
+        children: [
+          // Tab bar with custom styling
+          Theme(
+            data: Theme.of(context).copyWith(
+              splashColor: Colors.transparent,
+              highlightColor: Colors.transparent,
+            ),
+            child: TabBar(
+              controller: _tabController!,
+              isScrollable: true,
+              tabAlignment: TabAlignment.start,
+              padding: const EdgeInsets.only(left: 48, right: 48),
+              indicatorSize: TabBarIndicatorSize.label,
+              indicatorWeight: 3,
+              labelColor: Theme.of(context).primaryColor,
+              unselectedLabelColor: Colors.grey[600],
+              labelStyle: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+              ),
+              unselectedLabelStyle: const TextStyle(
+                fontWeight: FontWeight.normal,
+                fontSize: 14,
+              ),
+              tabs: framework.domains.map((domain) {
+                final tabText = _abbreviateDomainName(domain.name);
+                return Tab(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Text(
+                      tabText,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+
+          // Left scroll indicator with gradient
+          Positioned(
+            left: 0,
+            top: 0,
+            bottom: 0,
+            child: IgnorePointer(
+              ignoring: _currentTabIndex == 0,
+              child: AnimatedOpacity(
+                opacity: _currentTabIndex > 0 ? 1.0 : 0.0,
+                duration: const Duration(milliseconds: 200),
+                child: Container(
+                  width: 48,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Theme.of(context).scaffoldBackgroundColor,
+                        Theme.of(context)
+                            .scaffoldBackgroundColor
+                            .withOpacity(0.7),
+                        Theme.of(context)
+                            .scaffoldBackgroundColor
+                            .withOpacity(0),
+                      ],
+                      stops: const [0.0, 0.5, 1.0],
+                    ),
+                  ),
+                  child: const Center(
+                    child: Icon(
+                      Icons.chevron_left,
+                      size: 24,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          // Right scroll indicator with gradient
+          Positioned(
+            right: 0,
+            top: 0,
+            bottom: 0,
+            child: IgnorePointer(
+              ignoring: _currentTabIndex >= framework.domains.length - 1,
+              child: AnimatedOpacity(
+                opacity:
+                    _currentTabIndex < framework.domains.length - 1 ? 1.0 : 0.0,
+                duration: const Duration(milliseconds: 200),
+                child: Container(
+                  width: 48,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Theme.of(context)
+                            .scaffoldBackgroundColor
+                            .withOpacity(0),
+                        Theme.of(context)
+                            .scaffoldBackgroundColor
+                            .withOpacity(0.7),
+                        Theme.of(context).scaffoldBackgroundColor,
+                      ],
+                      stops: const [0.0, 0.5, 1.0],
+                    ),
+                  ),
+                  child: const Center(
+                    child: Icon(
+                      Icons.chevron_right,
+                      size: 24,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -199,221 +356,173 @@ class _AssessmentScreenState extends ConsumerState<AssessmentScreen>
     // Special view for BPMN rubric-style assessment
     return ListView(
       padding: const EdgeInsets.all(16),
-      children: [
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  domain.name,
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
-                const SizedBox(height: 16),
-
-                // For BPMN, show the rubric with 5 levels
-                if (domain.subdomains.isNotEmpty &&
-                    domain.subdomains.first.items.isNotEmpty)
-                  _buildBpmnRubricItem(domain.subdomains.first.items.first),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildBpmnRubricItem(AssessmentItem item) {
-    // Split the question text to show each maturity level
-    final levels = item.questionText
-        .split('Level')
-        .skip(1)
-        .map((text) => 'Level $text'.trim())
-        .toList();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Select your organization\'s maturity level:',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 16),
-
-        // Display each level as a selectable card
-        ...List.generate(5, (index) {
-          final level = index + 1;
-          final isSelected = item.response == level;
-          final levelText =
-              levels.length > index ? levels[index] : 'Level $level';
-
+      children: domain.subdomains.expand((subdomain) {
+        return subdomain.items.map((item) {
           return Card(
-            color: isSelected
-                ? Theme.of(context).primaryColor.withValues(alpha: 0.1)
-                : null,
-            child: InkWell(
-              onTap: () {
-                ref.read(sessionProvider.notifier).updateResponse(
-                      widget.frameworkType,
-                      item.id,
-                      level,
-                    );
-              },
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Radio<int>(
-                      value: level,
-                      groupValue: item.response,
-                      onChanged: (value) {
-                        ref.read(sessionProvider.notifier).updateResponse(
-                              widget.frameworkType,
-                              item.id,
-                              value,
-                            );
-                      },
-                    ),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Level $level',
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(levelText),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+            margin: const EdgeInsets.only(bottom: 16),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Question header
+                  Text(
+                    item.questionText.isNotEmpty
+                        ? item.questionText
+                        : subdomain.name,
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Select the maturity level that best describes your organization:',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Colors.grey[600],
+                        ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Display maturity levels from the maturityDescriptions map
+                  _buildBpmnMaturityLevels(item),
+                ],
               ),
             ),
           );
-        }),
-      ],
+        }).toList();
+      }).toList(),
+    );
+  }
+
+  Widget _buildBpmnMaturityLevels(AssessmentItem item) {
+    return Column(
+      children: List.generate(5, (index) {
+        final level = index + 1;
+        final isSelected = item.response == level;
+
+        // Get the description for this level from maturityDescriptions
+        final description = item.maturityDescriptions?[level] ??
+            'Level $level description not available';
+
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: InkWell(
+            onTap: () {
+              ref
+                  .read(sessionProvider.notifier)
+                  .updateResponse(widget.frameworkType, item.id, level);
+            },
+            borderRadius: BorderRadius.circular(8),
+            child: Container(
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? Theme.of(context).primaryColor.withOpacity(0.1)
+                    : null,
+                border: Border.all(
+                  color: isSelected
+                      ? Theme.of(context).primaryColor
+                      : Colors.grey[300]!,
+                  width: isSelected ? 2 : 1,
+                ),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              padding: const EdgeInsets.all(12),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Radio button
+                  Container(
+                    width: 24,
+                    height: 24,
+                    margin: const EdgeInsets.only(right: 12, top: 2),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: isSelected
+                            ? Theme.of(context).primaryColor
+                            : Colors.grey[400]!,
+                        width: 2,
+                      ),
+                    ),
+                    child: isSelected
+                        ? Center(
+                            child: Container(
+                              width: 12,
+                              height: 12,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Theme.of(context).primaryColor,
+                              ),
+                            ),
+                          )
+                        : null,
+                  ),
+                  // Level content
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Level $level',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: isSelected
+                                ? Theme.of(context).primaryColor
+                                : null,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          description,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: isSelected ? null : Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      }),
     );
   }
 
   Widget _buildAssessmentItem(AssessmentItem item) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(color: Colors.grey[300]!),
-        ),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Question text
           Text(
             item.questionText,
-            style: const TextStyle(fontSize: 15),
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
           ),
+          const SizedBox(height: 12),
+
+          // Response options based on type
+          if (item.responseType == 'likert_1_5' ||
+              item.responseType == 'maturity_level')
+            _buildLikertScale(item)
+          else if (item.responseType == 'yes_no')
+            _buildYesNoButtons(item)
+          else if (item.responseType == 'yes_no_planning')
+            _buildYesNoPlanningButtons(item)
+          else
+            _buildLikertScale(item), // Default to Likert scale
 
           // Scoring note if available
           if (item.scoringNote != null && item.scoringNote!.isNotEmpty) ...[
-            const SizedBox(height: 4),
+            const SizedBox(height: 8),
             Text(
               item.scoringNote!,
               style: TextStyle(
                 fontSize: 12,
-                color: Colors.grey[600],
                 fontStyle: FontStyle.italic,
+                color: Colors.grey[600],
               ),
-            ),
-          ],
-
-          const SizedBox(height: 12),
-
-          // Response selector
-          Row(
-            children: [
-              const Text('Not Applicable', style: TextStyle(fontSize: 12)),
-              const SizedBox(width: 8),
-
-              // Skip/NA button
-              OutlinedButton(
-                onPressed: () {
-                  ref.read(sessionProvider.notifier).updateResponse(
-                        widget.frameworkType,
-                        item.id,
-                        null,
-                      );
-                },
-                style: OutlinedButton.styleFrom(
-                  minimumSize: const Size(40, 36),
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  backgroundColor:
-                      item.response == null ? Colors.grey[200] : null,
-                ),
-                child: const Text('Skip'),
-              ),
-
-              const SizedBox(width: 16),
-              const Text('1', style: TextStyle(fontSize: 12)),
-              const SizedBox(width: 4),
-
-              // Score buttons 1-5
-              ...List.generate(5, (index) {
-                final score = index + 1;
-                return Padding(
-                  padding: const EdgeInsets.only(left: 4),
-                  child: ElevatedButton(
-                    onPressed: () {
-                      ref.read(sessionProvider.notifier).updateResponse(
-                            widget.frameworkType,
-                            item.id,
-                            score,
-                          );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: const Size(40, 36),
-                      padding: EdgeInsets.zero,
-                      backgroundColor: item.response == score
-                          ? _getColorForScore(score.toDouble())
-                          : Colors.grey[300],
-                      foregroundColor: item.response == score
-                          ? Colors.white
-                          : Colors.black54,
-                    ),
-                    child: Text('$score'),
-                  ),
-                );
-              }),
-
-              const SizedBox(width: 4),
-              const Text('5', style: TextStyle(fontSize: 12)),
-            ],
-          ),
-
-          // Comment field (optional)
-          if (item.response != null && item.response! > 0) ...[
-            const SizedBox(height: 8),
-            TextField(
-              decoration: const InputDecoration(
-                hintText: 'Add a comment (optional)',
-                border: OutlineInputBorder(),
-                contentPadding:
-                    EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                isDense: true,
-              ),
-              style: const TextStyle(fontSize: 14),
-              maxLines: 2,
-              controller: TextEditingController(text: item.comment),
-              onChanged: (value) {
-                ref.read(sessionProvider.notifier).updateResponse(
-                      widget.frameworkType,
-                      item.id,
-                      item.response,
-                      comment: value,
-                    );
-              },
             ),
           ],
         ],
@@ -421,8 +530,161 @@ class _AssessmentScreenState extends ConsumerState<AssessmentScreen>
     );
   }
 
+  Widget _buildLikertScale(AssessmentItem item) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: List.generate(5, (index) {
+        final value = index + 1;
+        final isSelected = item.response == value;
+
+        return Expanded(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 2),
+            child: ElevatedButton(
+              onPressed: () {
+                ref
+                    .read(sessionProvider.notifier)
+                    .updateResponse(widget.frameworkType, item.id, value);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: isSelected
+                    ? Theme.of(context).primaryColor
+                    : Colors.grey[200],
+                foregroundColor: isSelected ? Colors.white : Colors.black87,
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: Text(
+                '$value',
+                style: const TextStyle(fontSize: 14),
+              ),
+            ),
+          ),
+        );
+      }),
+    );
+  }
+
+  Widget _buildYesNoButtons(AssessmentItem item) {
+    return Row(
+      children: [
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.only(right: 4),
+            child: ElevatedButton(
+              onPressed: () {
+                ref
+                    .read(sessionProvider.notifier)
+                    .updateResponse(widget.frameworkType, item.id, 5);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: item.response == 5
+                    ? Theme.of(context).primaryColor
+                    : Colors.grey[200],
+                foregroundColor:
+                    item.response == 5 ? Colors.white : Colors.black87,
+              ),
+              child: const Text('Yes'),
+            ),
+          ),
+        ),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.only(left: 4),
+            child: ElevatedButton(
+              onPressed: () {
+                ref
+                    .read(sessionProvider.notifier)
+                    .updateResponse(widget.frameworkType, item.id, 1);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: item.response == 1
+                    ? Theme.of(context).primaryColor
+                    : Colors.grey[200],
+                foregroundColor:
+                    item.response == 1 ? Colors.white : Colors.black87,
+              ),
+              child: const Text('No'),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildYesNoPlanningButtons(AssessmentItem item) {
+    return Row(
+      children: [
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.only(right: 2),
+            child: ElevatedButton(
+              onPressed: () {
+                ref
+                    .read(sessionProvider.notifier)
+                    .updateResponse(widget.frameworkType, item.id, 5);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: item.response == 5
+                    ? Theme.of(context).primaryColor
+                    : Colors.grey[200],
+                foregroundColor:
+                    item.response == 5 ? Colors.white : Colors.black87,
+                padding: const EdgeInsets.symmetric(vertical: 8),
+              ),
+              child: const Text('Yes', style: TextStyle(fontSize: 13)),
+            ),
+          ),
+        ),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 2),
+            child: ElevatedButton(
+              onPressed: () {
+                ref
+                    .read(sessionProvider.notifier)
+                    .updateResponse(widget.frameworkType, item.id, 3);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: item.response == 3
+                    ? Theme.of(context).primaryColor
+                    : Colors.grey[200],
+                foregroundColor:
+                    item.response == 3 ? Colors.white : Colors.black87,
+                padding: const EdgeInsets.symmetric(vertical: 8),
+              ),
+              child: const Text('Planning', style: TextStyle(fontSize: 13)),
+            ),
+          ),
+        ),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.only(left: 2),
+            child: ElevatedButton(
+              onPressed: () {
+                ref
+                    .read(sessionProvider.notifier)
+                    .updateResponse(widget.frameworkType, item.id, 1);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: item.response == 1
+                    ? Theme.of(context).primaryColor
+                    : Colors.grey[200],
+                foregroundColor:
+                    item.response == 1 ? Colors.white : Colors.black87,
+                padding: const EdgeInsets.symmetric(vertical: 8),
+              ),
+              child: const Text('No', style: TextStyle(fontSize: 13)),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   Color _getColorForScore(double score) {
-    if (score == 0) return Colors.grey;
     if (score < 2) return Colors.red;
     if (score < 3) return Colors.orange;
     if (score < 4) return Colors.yellow[700]!;

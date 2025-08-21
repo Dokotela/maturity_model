@@ -1,5 +1,4 @@
 // lib/services/csv_loader_service.dart
-// VERSION FOR CLEANED/STANDARDIZED CSV FILES
 
 // ignore_for_file: avoid_print
 
@@ -36,22 +35,40 @@ class CsvLoaderService {
   /// Load a specific framework
   Future<Framework?> loadFramework(FrameworkType type) async {
     switch (type) {
+      case FrameworkType.bpmn:
+        return await _loadBpmnFramework();
+      case FrameworkType.adb:
+        return await _loadAdbFramework();
+      case FrameworkType.eccmFacility:
+        return await _loadEccmFramework('eccm_facility.csv', type);
+      case FrameworkType.eccmOrganization:
+        return await _loadEccmFramework('eccm_organization.csv', type);
       case FrameworkType.is4hInstitutional:
         return await _loadIs4hFramework(type, 'institute');
       case FrameworkType.is4hCountry:
         return await _loadIs4hFramework(type, 'country');
-      case FrameworkType.eccmFacility:
-        return await _loadStandardFramework('eccm_facility.csv', type);
-      case FrameworkType.eccmOrganization:
-        return await _loadStandardFramework('eccm_organization.csv', type);
-      case FrameworkType.bpmn:
-        return await _loadBpmnFramework();
-      case FrameworkType.adb:
-        return await _loadStandardFramework('adb.csv', type);
     }
   }
 
-  /// Load IS4H frameworks (now with consolidated maturity questions)
+  /// Get the framework ID string for a given type
+  String _getFrameworkId(FrameworkType type) {
+    switch (type) {
+      case FrameworkType.is4hInstitutional:
+        return 'is4h_institute';
+      case FrameworkType.is4hCountry:
+        return 'is4h_country';
+      case FrameworkType.eccmFacility:
+        return 'eccm_facility';
+      case FrameworkType.eccmOrganization:
+        return 'eccm_organization';
+      case FrameworkType.adb:
+        return 'adb';
+      case FrameworkType.bpmn:
+        return 'bpmn';
+    }
+  }
+
+  /// Load IS4H frameworks (consolidated maturity questions)
   Future<Framework?> _loadIs4hFramework(
       FrameworkType type, String level) async {
     final Map<String, Map<String, List<AssessmentItem>>> allData = {};
@@ -87,9 +104,8 @@ class CsvLoaderService {
           final subdomain = row['subdomain']?.toString() ?? 'General';
           allData[mainDomain]![subdomain] ??= [];
 
-          // Handle maturity questions (consolidated format)
+          // Handle maturity questions
           if (itemType == 'maturity_question') {
-            // Build maturity descriptions map
             final maturityDescriptions = <int, String>{};
             for (int level = 1; level <= 5; level++) {
               final description = row['maturity_$level']?.toString() ?? '';
@@ -100,7 +116,7 @@ class CsvLoaderService {
 
             final item = AssessmentItem(
               id: row['item_id']?.toString() ?? '',
-              frameworkId: type.filePrefix,
+              frameworkId: _getFrameworkId(type), // Use helper method
               domain: mainDomain,
               subdomain: subdomain,
               itemType: 'maturity_scale',
@@ -112,16 +128,14 @@ class CsvLoaderService {
 
             allData[mainDomain]![subdomain]!.add(item);
           } else if (itemType == 'question') {
-            // Regular question without maturity levels
+            // Regular question
             final item = AssessmentItem(
               id: row['item_id']?.toString() ?? '',
-              frameworkId: type.filePrefix,
+              frameworkId: _getFrameworkId(type), // Use helper method
               domain: mainDomain,
               subdomain: subdomain,
               itemType: 'question',
-              questionText: row['question_text']?.toString() ??
-                  row['text_english']?.toString() ??
-                  '',
+              questionText: row['question_text']?.toString() ?? '',
               responseType: row['response_type']?.toString() ?? 'scale',
               scoringNote: row['scoring_note']?.toString(),
             );
@@ -144,8 +158,8 @@ class CsvLoaderService {
     );
   }
 
-  /// Load standard frameworks (ECCM, ADB)
-  Future<Framework?> _loadStandardFramework(
+  /// Load ECCM frameworks
+  Future<Framework?> _loadEccmFramework(
       String fileName, FrameworkType type) async {
     try {
       final csvString = await rootBundle.loadString('assets/csv/$fileName');
@@ -171,15 +185,13 @@ class CsvLoaderService {
 
         final item = AssessmentItem(
           id: row['item_id']?.toString() ?? '',
-          frameworkId: type.filePrefix,
+          frameworkId: _getFrameworkId(type), // Use helper method
           domain: domain,
           subdomain: subdomain,
-          itemType: row['item_type']?.toString() ?? 'question',
-          questionText: row['question_text']?.toString() ??
-              row['text_english']?.toString() ??
-              '',
+          itemType: row['item_type']?.toString() ?? 'assessment',
+          questionText: row['text_english']?.toString() ?? '',
           maturityLevel: _parseMaturityLevel(row['maturity_level']),
-          responseType: row['response_type']?.toString() ?? 'scale',
+          responseType: row['response_type']?.toString() ?? 'checkbox',
           scoringNote: row['scoring_note']?.toString(),
         );
 
@@ -200,7 +212,61 @@ class CsvLoaderService {
     }
   }
 
-  /// Load BPMN framework (special rubric format)
+  /// Load ADB framework
+  Future<Framework?> _loadAdbFramework() async {
+    try {
+      final csvString = await rootBundle.loadString('assets/csv/adb.csv');
+      final List<List<dynamic>> csvTable =
+          const CsvToListConverter().convert(csvString);
+
+      if (csvTable.isEmpty) return null;
+
+      final headers = csvTable[0].map((e) => e.toString().trim()).toList();
+      final Map<String, Map<String, List<AssessmentItem>>> groupedData = {};
+
+      for (int i = 1; i < csvTable.length; i++) {
+        final Map<String, dynamic> row = {};
+        for (int j = 0; j < headers.length && j < csvTable[i].length; j++) {
+          row[headers[j]] = csvTable[i][j];
+        }
+
+        final domain = row['domain']?.toString() ?? 'General';
+        final subdomain = row['subdomain']?.toString() ?? 'General';
+
+        groupedData[domain] ??= {};
+        groupedData[domain]![subdomain] ??= [];
+
+        final item = AssessmentItem(
+          id: row['item_id']?.toString() ?? '',
+          frameworkId: 'adb',
+          domain: domain,
+          subdomain: subdomain,
+          itemType: row['item_type']?.toString() ?? 'statement',
+          questionText: row['question_text']?.toString() ??
+              row['text_english']?.toString() ??
+              '',
+          responseType: row['response_type']?.toString() ?? 'likert_1_5',
+          scoringNote: row['scoring_note']?.toString(),
+        );
+
+        groupedData[domain]![subdomain]!.add(item);
+      }
+
+      final domains = _createDomainsFromGroupedData(groupedData);
+
+      return Framework(
+        type: FrameworkType.adb,
+        name: 'ADB Digital Health Readiness',
+        description: _getFrameworkDescription(FrameworkType.adb),
+        domains: domains,
+      );
+    } catch (e) {
+      print('Error loading ADB: $e');
+      return null;
+    }
+  }
+
+  /// Load BPMN framework (now with consolidated CSV structure like other frameworks)
   Future<Framework?> _loadBpmnFramework() async {
     try {
       final csvString = await rootBundle.loadString('assets/csv/bpmn.csv');
@@ -210,9 +276,7 @@ class CsvLoaderService {
       if (csvTable.isEmpty) return null;
 
       final headers = csvTable[0].map((e) => e.toString().trim()).toList();
-
-      // Group by domain to create rubric items
-      final Map<String, Map<int, String>> domainDescriptions = {};
+      final Map<String, Map<String, List<AssessmentItem>>> groupedData = {};
 
       for (int i = 1; i < csvTable.length; i++) {
         final Map<String, dynamic> row = {};
@@ -220,59 +284,55 @@ class CsvLoaderService {
           row[headers[j]] = csvTable[i][j];
         }
 
-        final domain = row['domain']?.toString();
-        final itemType = row['item_type']?.toString();
-        final maturityLevel = _parseMaturityLevel(row['maturity_level']);
-        final description = row['text_english']?.toString() ?? '';
+        final domain = row['domain']?.toString() ?? '';
+        final subdomain = row['subdomain']?.toString() ?? 'Assessment';
 
-        if (domain != null && domain != 'General' && itemType == 'assessment') {
-          domainDescriptions[domain] ??= {};
-          domainDescriptions[domain]![maturityLevel ?? 1] = description;
+        // Build maturity descriptions from the maturity_1 through maturity_5 columns
+        final maturityDescriptions = <int, String>{};
+        for (int level = 1; level <= 5; level++) {
+          final description = row['maturity_$level']?.toString() ?? '';
+          if (description.isNotEmpty) {
+            maturityDescriptions[level] = description;
+          }
         }
-      }
 
-      // Create domains with rubric items
-      final domains = <Domain>[];
-
-      for (final entry in domainDescriptions.entries) {
-        final domainName = entry.key;
-        final descriptions = entry.value;
+        groupedData[domain] ??= {};
+        groupedData[domain]![subdomain] ??= [];
 
         final item = AssessmentItem(
-          id: 'bpmn_${domainName.toLowerCase().replaceAll(' ', '_').replaceAll('/', '_')}',
+          id: row['item_id']?.toString() ?? '',
           frameworkId: 'bpmn',
-          domain: domainName,
-          subdomain: 'Assessment',
-          itemType: 'rubric',
-          questionText:
-              'Select the maturity level that best describes your organization',
-          maturityDescriptions: descriptions,
-          responseType: 'maturity_level',
+          domain: domain,
+          subdomain: subdomain,
+          itemType: row['item_type']?.toString() ?? 'maturity_rubric',
+          questionText: row['question_text']?.toString() ?? '',
+          maturityDescriptions: maturityDescriptions,
+          responseType: row['response_type']?.toString() ?? 'maturity_level',
+          scoringNote: row['scoring_note']?.toString(),
         );
 
-        domains.add(
-          Domain(
-            id: domainName.toLowerCase().replaceAll(' ', '_'),
-            name: domainName,
-            subdomains: [
-              Subdomain(
-                id: '${domainName.toLowerCase().replaceAll(' ', '_')}_assessment',
-                name: 'Maturity Assessment',
-                items: [item],
-              ),
-            ],
-          ),
-        );
+        groupedData[domain]![subdomain]!.add(item);
+      }
+
+      final domains = _createDomainsFromGroupedData(groupedData);
+
+      print('BPMN loaded with ${domains.length} domains');
+      for (final domain in domains) {
+        print('  - ${domain.name}: ${domain.subdomains.length} subdomains');
+        for (final subdomain in domain.subdomains) {
+          print('    - ${subdomain.name}: ${subdomain.items.length} items');
+        }
       }
 
       return Framework(
         type: FrameworkType.bpmn,
-        name: 'BPMN Maturity Model',
+        name: 'BPM+ Clinical Practice Guideline',
         description: _getFrameworkDescription(FrameworkType.bpmn),
         domains: domains,
       );
     } catch (e) {
       print('Error loading BPMN: $e');
+      print('Stack trace: ${StackTrace.current}');
       return null;
     }
   }
@@ -330,18 +390,18 @@ class CsvLoaderService {
   /// Get framework description
   String _getFrameworkDescription(FrameworkType type) {
     switch (type) {
-      case FrameworkType.is4hInstitutional:
-        return 'Information Systems for Health maturity assessment for healthcare institutions';
-      case FrameworkType.is4hCountry:
-        return 'Information Systems for Health maturity assessment at country level';
-      case FrameworkType.eccmFacility:
-        return 'Essential Care Continuity Maturity Model for healthcare facilities';
-      case FrameworkType.eccmOrganization:
-        return 'Essential Care Continuity Maturity Model for organizations';
       case FrameworkType.bpmn:
         return 'Business Process Maturity Model for healthcare organizations';
       case FrameworkType.adb:
         return 'Asian Development Bank digital health readiness assessment';
+      case FrameworkType.eccmFacility:
+        return 'Essential Care Continuity Maturity Model for healthcare facilities';
+      case FrameworkType.eccmOrganization:
+        return 'Essential Care Continuity Maturity Model for organizations';
+      case FrameworkType.is4hInstitutional:
+        return 'Information Systems for Health maturity assessment for healthcare institutions';
+      case FrameworkType.is4hCountry:
+        return 'Information Systems for Health maturity assessment at country level';
     }
   }
 }
