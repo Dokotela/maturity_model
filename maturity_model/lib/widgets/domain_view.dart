@@ -1,5 +1,4 @@
-// This can go in its own file: lib/widgets/domain_view.dart
-// Or stay in assessment_screen.dart as a public class
+// lib/widgets/domain_view.dart - Optimized version
 
 import 'package:flutter/material.dart';
 import 'package:maturity_model/maturity_model.dart';
@@ -27,35 +26,49 @@ class DomainView extends StatelessWidget {
       );
     }
 
-    // For other frameworks, use standard question view
-    return _StandardDomainView(
+    // For other frameworks, use optimized standard view
+    return _OptimizedStandardDomainView(
       domain: domain,
       frameworkType: frameworkType,
     );
   }
 }
 
-/// Standard domain view for non-BPMN frameworks
-class _StandardDomainView extends StatefulWidget {
+/// Optimized standard domain view using ListView.builder
+class _OptimizedStandardDomainView extends StatefulWidget {
   final Domain domain;
   final FrameworkType frameworkType;
 
-  const _StandardDomainView({
+  const _OptimizedStandardDomainView({
     required this.domain,
     required this.frameworkType,
   });
 
   @override
-  State<_StandardDomainView> createState() => _StandardDomainViewState();
+  State<_OptimizedStandardDomainView> createState() =>
+      _OptimizedStandardDomainViewState();
 }
 
-class _StandardDomainViewState extends State<_StandardDomainView> {
+class _OptimizedStandardDomainViewState
+    extends State<_OptimizedStandardDomainView>
+    with AutomaticKeepAliveClientMixin {
   late final ScrollController _scrollController;
+
+  // Track which subdomains are expanded
+  final Map<String, bool> _expandedStates = {};
+
+  @override
+  bool get wantKeepAlive => true; // Keep state when switching tabs
 
   @override
   void initState() {
     super.initState();
     _scrollController = ScrollController();
+
+    // Initialize all subdomains as expanded
+    for (final subdomain in widget.domain.subdomains) {
+      _expandedStates[subdomain.id] = true;
+    }
   }
 
   @override
@@ -66,25 +79,43 @@ class _StandardDomainViewState extends State<_StandardDomainView> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context); // Required for AutomaticKeepAliveClientMixin
+
+    // Calculate total item count: 1 header + subdomain count
+    final itemCount = 1 + widget.domain.subdomains.length;
+
     return Scrollbar(
       controller: _scrollController,
       thumbVisibility: true,
-      child: ListView(
+      child: ListView.builder(
         controller: _scrollController,
         padding: const EdgeInsets.all(16),
-        children: [
-          // Domain header
-          _DomainHeader(domain: widget.domain),
-          const SizedBox(height: 16),
-
-          // Subdomains with questions
-          ...widget.domain.subdomains.map((subdomain) {
-            return _SubdomainSection(
-              subdomain: subdomain,
-              frameworkType: widget.frameworkType,
+        itemCount: itemCount,
+        itemBuilder: (context, index) {
+          // First item is always the header
+          if (index == 0) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: _DomainHeader(domain: widget.domain),
             );
-          }),
-        ],
+          }
+
+          // Subsequent items are subdomains
+          final subdomainIndex = index - 1;
+          final subdomain = widget.domain.subdomains[subdomainIndex];
+
+          return _LazySubdomainSection(
+            key: ValueKey(subdomain.id),
+            subdomain: subdomain,
+            frameworkType: widget.frameworkType,
+            isExpanded: _expandedStates[subdomain.id] ?? true,
+            onExpansionChanged: (expanded) {
+              setState(() {
+                _expandedStates[subdomain.id] = expanded;
+              });
+            },
+          );
+        },
       ),
     );
   }
@@ -135,14 +166,19 @@ class _DomainHeader extends StatelessWidget {
   }
 }
 
-/// Subdomain section with expandable tile
-class _SubdomainSection extends StatelessWidget {
+/// Lazy-loading subdomain section that only builds children when expanded
+class _LazySubdomainSection extends StatelessWidget {
   final Subdomain subdomain;
   final FrameworkType frameworkType;
+  final bool isExpanded;
+  final ValueChanged<bool> onExpansionChanged;
 
-  const _SubdomainSection({
+  const _LazySubdomainSection({
+    super.key,
     required this.subdomain,
     required this.frameworkType,
+    required this.isExpanded,
+    required this.onExpansionChanged,
   });
 
   @override
@@ -161,7 +197,10 @@ class _SubdomainSection extends StatelessWidget {
           dividerColor: Colors.transparent,
         ),
         child: ExpansionTile(
-          initiallyExpanded: true,
+          key: ValueKey(subdomain.id),
+          initiallyExpanded: isExpanded,
+          maintainState: true,
+          onExpansionChanged: onExpansionChanged,
           tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           childrenPadding: EdgeInsets.zero,
           expandedCrossAxisAlignment: CrossAxisAlignment.start,
@@ -187,12 +226,16 @@ class _SubdomainSection extends StatelessWidget {
               color: Colors.grey[600],
             ),
           ),
-          children: subdomain.items
-              .map((item) => AssessmentItemWidget(
-                    item: item,
-                    frameworkType: frameworkType,
-                  ))
-              .toList(),
+          // Only build children when expanded
+          children: isExpanded
+              ? subdomain.items
+                  .map((item) => AssessmentItemWidget(
+                        key: ValueKey(item.id),
+                        item: item,
+                        frameworkType: frameworkType,
+                      ))
+                  .toList()
+              : [],
         ),
       ),
     );

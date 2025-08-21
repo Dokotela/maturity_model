@@ -16,47 +16,72 @@ class SessionNotifier extends StateNotifier<AssessmentSession> {
   final Ref ref;
   static const String _storageKey = 'assessment_session';
 
+  // Single source of truth for initialization
+  bool _hasLoadedFrameworks = false;
+  bool _isCurrentlyLoading = false;
+
   SessionNotifier(this.ref) : super(AssessmentSession()) {
-    // Load saved session on initialization
-    _loadFromLocalStorage();
+    // Load saved session AND frameworks on initialization
+    _initializeOnce();
   }
 
-  /// Initialize a new session with all frameworks
-  Future<void> initializeSession() async {
-    final loader = ref.read(csvLoaderProvider);
-    final frameworks = await loader.loadAllFrameworks();
+  /// Single initialization point - called ONLY from constructor
+  Future<void> _initializeOnce() async {
+    if (_hasLoadedFrameworks || _isCurrentlyLoading) return;
+    _isCurrentlyLoading = true;
 
-    state = AssessmentSession(
-      frameworks: frameworks,
-    );
+    try {
+      // First, load all frameworks (this happens exactly once)
+      final loader = ref.read(csvLoaderProvider);
+      final frameworks = await loader.loadAllFrameworks();
 
-    // Auto-save after initialization
-    await _saveToLocalStorage();
-  }
+      // Then check for saved responses
+      final prefs = await SharedPreferences.getInstance();
+      final savedData = prefs.getString(_storageKey);
 
-  /// Load a specific framework
-  Future<void> loadFramework(FrameworkType type) async {
-    final loader = ref.read(csvLoaderProvider);
-    final framework = await loader.loadFramework(type);
+      if (savedData != null) {
+        final data = jsonDecode(savedData) as Map<String, dynamic>;
 
-    if (framework != null) {
-      final newFrameworks =
-          Map<FrameworkType, Framework>.from(state.frameworks);
-      newFrameworks[type] = framework;
+        // Create session with loaded frameworks
+        state = AssessmentSession(
+          sessionId: data['sessionId'] ??
+              DateTime.now().millisecondsSinceEpoch.toString(),
+          createdAt: data['createdAt'] != null
+              ? DateTime.parse(data['createdAt'])
+              : DateTime.now(),
+          organizationName: data['organizationName'],
+          assessorName: data['assessorName'],
+          location: data['location'],
+          additionalNotes: data['additionalNotes'],
+          frameworks: frameworks, // Use the loaded frameworks
+        );
 
-      state = AssessmentSession(
-        sessionId: state.sessionId,
-        createdAt: state.createdAt,
-        organizationName: state.organizationName,
-        assessorName: state.assessorName,
-        location: state.location,
-        additionalNotes: state.additionalNotes,
-        frameworks: newFrameworks,
-      );
+        // Apply saved responses to the frameworks
+        if (data['responses'] != null) {
+          _applyResponses(data['responses'] as Map<String, dynamic>);
+        }
+      } else {
+        // No saved data, just use the loaded frameworks
+        state = AssessmentSession(frameworks: frameworks);
+      }
 
-      await _saveToLocalStorage();
+      _hasLoadedFrameworks = true;
+    } catch (e) {
+      print('Error during initialization: $e');
+      // Even on error, create basic session with loaded frameworks
+      state = AssessmentSession();
+    } finally {
+      _isCurrentlyLoading = false;
     }
   }
+
+  /// Get a framework (already loaded, just return it)
+  Framework? getFramework(FrameworkType type) {
+    return state.frameworks[type];
+  }
+
+  /// Check if frameworks are loaded
+  bool get areFrameworksLoaded => _hasLoadedFrameworks;
 
   /// Update organization info
   void updateOrganizationInfo({
@@ -72,7 +97,7 @@ class SessionNotifier extends StateNotifier<AssessmentSession> {
       assessorName: assessorName ?? state.assessorName,
       location: location ?? state.location,
       additionalNotes: additionalNotes ?? state.additionalNotes,
-      frameworks: state.frameworks,
+      frameworks: state.frameworks, // Keep the same framework instances
     );
 
     _saveToLocalStorage();
@@ -88,7 +113,7 @@ class SessionNotifier extends StateNotifier<AssessmentSession> {
     final framework = state.frameworks[frameworkType];
     if (framework == null) return;
 
-    // Find and update the item (mutating in place is fine)
+    // Find and update the item
     bool updated = false;
     for (final domain in framework.domains) {
       for (final subdomain in domain.subdomains) {
@@ -108,14 +133,13 @@ class SessionNotifier extends StateNotifier<AssessmentSession> {
       // Update timestamps
       framework.lastModified = DateTime.now();
 
-      // Create new state using copyWith - this creates a new AssessmentSession instance
-      // which triggers Riverpod to rebuild
+      // Create new state to trigger rebuilds
       state = state.copyWith(
         lastModified: DateTime.now(),
-        frameworks: state.frameworks, // Same map reference is fine
+        frameworks: state.frameworks, // Same framework instances
       );
 
-      // Auto-save
+      // Auto-save responses only
       _saveToLocalStorage();
     }
   }
@@ -142,16 +166,33 @@ class SessionNotifier extends StateNotifier<AssessmentSession> {
       assessorName: state.assessorName,
       location: state.location,
       additionalNotes: state.additionalNotes,
-      frameworks: Map.from(state.frameworks),
+      frameworks: state.frameworks, // Same framework instances
     );
 
     _saveToLocalStorage();
   }
 
-  /// Reset entire session
+  /// Reset entire session (keeps frameworks, clears responses)
   Future<void> resetSession() async {
-    state = AssessmentSession();
-    await initializeSession();
+    // Clear all responses but keep frameworks
+    for (final framework in state.frameworks.values) {
+      for (final domain in framework.domains) {
+        for (final subdomain in domain.subdomains) {
+          for (final item in subdomain.items) {
+            item.response = null;
+            item.comment = null;
+            item.responseTimestamp = null;
+          }
+        }
+      }
+    }
+
+    // Create fresh session with same frameworks
+    state = AssessmentSession(
+      frameworks: state.frameworks, // Reuse the same framework instances
+    );
+
+    await _saveToLocalStorage();
   }
 
   /// Export session to CSV string
@@ -167,7 +208,40 @@ class SessionNotifier extends StateNotifier<AssessmentSession> {
       final importedSession = await exporter.importSessionFromCsv(csvContent);
 
       if (importedSession != null) {
-        state = importedSession;
+        // Use our already-loaded frameworks, just apply the responses
+        state = AssessmentSession(
+          sessionId: importedSession.sessionId,
+          createdAt: importedSession.createdAt,
+          organizationName: importedSession.organizationName,
+          assessorName: importedSession.assessorName,
+          location: importedSession.location,
+          additionalNotes: importedSession.additionalNotes,
+          frameworks: state.frameworks, // Keep our frameworks
+        );
+
+        // Apply the imported responses
+        for (final entry in importedSession.frameworks.entries) {
+          final importedFramework = entry.value;
+          final ourFramework = state.frameworks[entry.key];
+          if (ourFramework != null) {
+            for (final domain in ourFramework.domains) {
+              for (final subdomain in domain.subdomains) {
+                for (final item in subdomain.items) {
+                  // Find matching item in imported data
+                  final importedItem = importedFramework.domains
+                      .expand((d) => d.subdomains)
+                      .expand((s) => s.items)
+                      .firstWhere((i) => i.id == item.id, orElse: () => item);
+
+                  item.response = importedItem.response;
+                  item.comment = importedItem.comment;
+                  item.responseTimestamp = importedItem.responseTimestamp;
+                }
+              }
+            }
+          }
+        }
+
         await _saveToLocalStorage();
         return true;
       }
@@ -178,12 +252,12 @@ class SessionNotifier extends StateNotifier<AssessmentSession> {
     }
   }
 
-  /// Save to localStorage
+  /// Save ONLY responses to localStorage (not frameworks)
   Future<void> _saveToLocalStorage() async {
     try {
       final prefs = await SharedPreferences.getInstance();
 
-      // Create a simplified version for storage (just responses, not full framework definitions)
+      // Save only metadata and responses, not framework definitions
       final storageData = {
         'sessionId': state.sessionId,
         'createdAt': state.createdAt.toIso8601String(),
@@ -192,52 +266,12 @@ class SessionNotifier extends StateNotifier<AssessmentSession> {
         'assessorName': state.assessorName,
         'location': state.location,
         'additionalNotes': state.additionalNotes,
-        'responses': _extractResponses(),
+        'responses': _extractResponses(), // Only responses
       };
 
       await prefs.setString(_storageKey, jsonEncode(storageData));
     } catch (e) {
       print('Error saving to localStorage: $e');
-    }
-  }
-
-  /// Load from localStorage
-  Future<void> _loadFromLocalStorage() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final savedData = prefs.getString(_storageKey);
-
-      if (savedData != null) {
-        final data = jsonDecode(savedData) as Map<String, dynamic>;
-
-        // Load frameworks first
-        await initializeSession();
-
-        // Then apply saved data
-        state = AssessmentSession(
-          sessionId: data['sessionId'] ?? state.sessionId,
-          createdAt: data['createdAt'] != null
-              ? DateTime.parse(data['createdAt'])
-              : state.createdAt,
-          organizationName: data['organizationName'],
-          assessorName: data['assessorName'],
-          location: data['location'],
-          additionalNotes: data['additionalNotes'],
-          frameworks: state.frameworks,
-        );
-
-        // Apply saved responses
-        if (data['responses'] != null) {
-          _applyResponses(data['responses'] as Map<String, dynamic>);
-        }
-      } else {
-        // No saved session, initialize new one
-        await initializeSession();
-      }
-    } catch (e) {
-      print('Error loading from localStorage: $e');
-      // If loading fails, start fresh
-      await initializeSession();
     }
   }
 
