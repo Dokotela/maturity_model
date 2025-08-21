@@ -18,30 +18,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   final _nameController = TextEditingController();
   final _locationController = TextEditingController();
 
-  @override
-  void initState() {
-    super.initState();
-    // DON'T call initializeSession here - it's already done in SessionNotifier constructor
+  // Debounce timer for text field updates
+  Timer? _debounceTimer;
 
-    // Just set initial values from current session
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final session = ref.read(sessionProvider);
-      _orgController.text = session.organizationName ?? '';
-      _nameController.text = session.assessorName ?? '';
-      _locationController.text = session.location ?? '';
-    });
-  }
+  // REMOVED the entire initState() method. It is not needed.
 
   @override
   void dispose() {
+    _debounceTimer?.cancel();
     _orgController.dispose();
     _nameController.dispose();
     _locationController.dispose();
     super.dispose();
   }
-
-  // Debounce timer for text field updates
-  Timer? _debounceTimer;
 
   void _onTextFieldChanged(String value, void Function(String) updateFunction) {
     _debounceTimer?.cancel();
@@ -52,6 +41,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Watch the session provider. This will cause the widget to rebuild
+    // when session data (like organization name) changes.
+    final session = ref.watch(sessionProvider);
+
+    // Synchronize the controllers with the state from the provider.
+    // This is the declarative "Riverpod way". We add a check to prevent
+    // rebuilding while the user is actively typing, which would cause
+    // the cursor to jump to the end.
+    if (_orgController.text != (session.organizationName ?? '')) {
+      _orgController.text = session.organizationName ?? '';
+    }
+    if (_nameController.text != (session.assessorName ?? '')) {
+      _nameController.text = session.assessorName ?? '';
+    }
+    if (_locationController.text != (session.location ?? '')) {
+      _locationController.text = session.location ?? '';
+    }
+
     final screenWidth = MediaQuery.of(context).size.width;
 
     // Determine layout based on screen size

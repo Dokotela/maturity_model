@@ -1,9 +1,26 @@
-// This can go in its own file: lib/widgets/bpmn_rubric_view.dart
-// Or stay in assessment_screen.dart as a public class
+// lib/widgets/bpmn_rubric_view.dart
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:maturity_model/maturity_model.dart';
+
+/// Helper function to get BPMN level labels
+String _getBpmnLevelLabel(int level) {
+  switch (level) {
+    case 1:
+      return 'Level 1: Initial/Inconsistent';
+    case 2:
+      return 'Level 2: Repeatable/Stabilized';
+    case 3:
+      return 'Level 3: Defined/Standardized';
+    case 4:
+      return 'Level 4: Quantitatively Managed';
+    case 5:
+      return 'Level 5: Learning Health System';
+    default:
+      return 'Level $level';
+  }
+}
 
 /// BPMN-specific rubric view for maturity level assessment
 class BpmnRubricView extends ConsumerWidget {
@@ -202,7 +219,7 @@ class _MaturityLevelButton extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Level $level',
+                    _getBpmnLevelLabel(level), // <-- THIS IS THE KEY CHANGE
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: isSelected ? Theme.of(context).primaryColor : null,

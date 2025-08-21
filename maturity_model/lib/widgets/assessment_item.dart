@@ -4,6 +4,67 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:maturity_model/maturity_model.dart';
 
+/// Helper function to get the scale label for a given level based on framework type
+String _getScaleLabel(FrameworkType frameworkType, int level) {
+  switch (frameworkType) {
+    case FrameworkType.bpmn:
+      switch (level) {
+        case 1:
+          return 'Level 1 Initial/ Inconsistent';
+        case 2:
+          return 'Level 2 Repeatable / Stabilized';
+        case 3:
+          return 'Level 3 Defined / Standardized';
+        case 4:
+          return 'Level 4 Quantitatively Managed';
+        case 5:
+          return 'Level 5 Learning Health System';
+        default:
+          return 'Level $level';
+      }
+
+    case FrameworkType.eccmFacility:
+    case FrameworkType.eccmOrganization:
+      // ECCM uses named levels
+      switch (level) {
+        case 1:
+          return 'Level 1: Nascent';
+        case 2:
+          return 'Level 2: Emerging';
+        case 3:
+          return 'Level 3: Established';
+        case 4:
+          return 'Level 4: Institutional';
+        case 5:
+          return 'Level 5: Optimized';
+        default:
+          return 'Level $level';
+      }
+
+    case FrameworkType.is4hInstitutional:
+    case FrameworkType.is4hCountry:
+      // IS4H uses named levels
+      switch (level) {
+        case 1:
+          return 'Initiated';
+        case 2:
+          return 'Developing';
+        case 3:
+          return 'Defined';
+        case 4:
+          return 'Integrated';
+        case 5:
+          return 'Optimized';
+        default:
+          return 'Level $level';
+      }
+
+    case FrameworkType.adb:
+      // ADB and others just use numbers
+      return '$level';
+  }
+}
+
 /// Individual assessment item widget - handles all response types
 class AssessmentItemWidget extends StatelessWidget {
   final AssessmentItem item;
@@ -114,17 +175,19 @@ class _LikertScale extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Use horizontal layout for ADB (just numbers)
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: List.generate(5, (index) {
         final value = index + 1;
         final isSelected = item.response == value;
+        final label = _getScaleLabel(frameworkType, value);
 
         return Expanded(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 2),
             child: _ResponseButton(
-              label: '$value',
+              label: label,
               isSelected: isSelected,
               onPressed: () {
                 ref.read(sessionProvider.notifier).updateResponse(
@@ -286,15 +349,19 @@ class _ResponseButton extends StatelessWidget {
         foregroundColor: isSelected ? Colors.white : Colors.black87,
         padding: EdgeInsets.symmetric(
           vertical: isCompact ? 8 : 12,
+          horizontal: isCompact ? 4 : 8,
         ),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
         ),
       ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: isCompact ? 13 : 14,
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: isCompact ? 13 : 14,
+          ),
         ),
       ),
     );
