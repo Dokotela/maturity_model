@@ -13,7 +13,7 @@ import 'package:flutter/material.dart'
         State,
         StatefulWidget;
 import 'package:maturity_model/maturity_model.dart'
-    show AssessmentsListScreen, HomeScreen, ResultsScreen, SettingsScreen;
+    show HomeScreen, ResultsScreen, SettingsScreen;
 
 class MainNavigationScreen extends StatefulWidget {
   const MainNavigationScreen({super.key});
@@ -30,11 +30,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       icon: Icon(Icons.home_outlined),
       selectedIcon: Icon(Icons.home),
       label: 'Home',
-    ),
-    NavigationDestination(
-      icon: Icon(Icons.assessment_outlined),
-      selectedIcon: Icon(Icons.assessment),
-      label: 'Assessments',
     ),
     NavigationDestination(
       icon: Icon(Icons.analytics_outlined),
@@ -55,7 +50,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         index: _selectedIndex,
         children: [
           const HomeScreen(),
-          const AssessmentsListScreen(),
           const ResultsScreen(),
           const SettingsScreen(),
         ],

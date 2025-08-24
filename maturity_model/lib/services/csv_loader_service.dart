@@ -158,7 +158,7 @@ class CsvLoaderService {
     );
   }
 
-  /// Load ECCM frameworks
+  /// Load ECCM frameworks - FIXED VERSION
   Future<Framework?> _loadEccmFramework(
       String fileName, FrameworkType type) async {
     try {
@@ -171,6 +171,11 @@ class CsvLoaderService {
       final headers = csvTable[0].map((e) => e.toString().trim()).toList();
       final Map<String, Map<String, List<AssessmentItem>>> groupedData = {};
 
+      // Temporary storage for grouping rows by scoring_note
+      final Map<String, Map<String, Map<String, List<Map<String, dynamic>>>>>
+          tempGrouping = {};
+
+      // First pass: Group all rows by domain -> subdomain -> scoring_note
       for (int i = 1; i < csvTable.length; i++) {
         final Map<String, dynamic> row = {};
         for (int j = 0; j < headers.length && j < csvTable[i].length; j++) {
@@ -179,23 +184,86 @@ class CsvLoaderService {
 
         final domain = row['domain']?.toString() ?? 'General';
         final subdomain = row['subdomain']?.toString() ?? 'General';
+        var scoringNote = row['scoring_note']?.toString() ?? '';
 
+        // For ECCM, group by subdomain if no scoring_note, otherwise group by scoring_note
+        String groupingKey;
+        if (scoringNote.isEmpty) {
+          // Group by subdomain for items without scoring notes
+          groupingKey = '${domain}_$subdomain';
+        } else {
+          // Group by scoring note for items with scoring notes
+          groupingKey = '${domain}_${subdomain}_$scoringNote';
+        }
+
+        tempGrouping[domain] ??= {};
+        tempGrouping[domain]![subdomain] ??= {};
+        tempGrouping[domain]![subdomain]![groupingKey] ??= [];
+        tempGrouping[domain]![subdomain]![groupingKey]!.add(row);
+      }
+
+      // Second pass: Create AssessmentItems from grouped data
+      for (final domainEntry in tempGrouping.entries) {
+        final domain = domainEntry.key;
         groupedData[domain] ??= {};
-        groupedData[domain]![subdomain] ??= [];
 
-        final item = AssessmentItem(
-          id: row['item_id']?.toString() ?? '',
-          frameworkId: _getFrameworkId(type), // Use helper method
-          domain: domain,
-          subdomain: subdomain,
-          itemType: row['item_type']?.toString() ?? 'assessment',
-          questionText: row['text_english']?.toString() ?? '',
-          maturityLevel: _parseMaturityLevel(row['maturity_level']),
-          responseType: row['response_type']?.toString() ?? 'checkbox',
-          scoringNote: row['scoring_note']?.toString(),
-        );
+        for (final subdomainEntry in domainEntry.value.entries) {
+          final subdomain = subdomainEntry.key;
+          groupedData[domain]![subdomain] ??= [];
 
-        groupedData[domain]![subdomain]!.add(item);
+          for (final groupingKeyEntry in subdomainEntry.value.entries) {
+            final groupingKey = groupingKeyEntry.key;
+            final rows = groupingKeyEntry.value;
+
+            // Sort rows by maturity_level to ensure correct order
+            rows.sort((a, b) {
+              final levelA = _parseMaturityLevel(a['maturity_level']) ?? 0;
+              final levelB = _parseMaturityLevel(b['maturity_level']) ?? 0;
+              return levelA.compareTo(levelB);
+            });
+
+            // Build maturity descriptions from the grouped rows
+            final maturityDescriptions = <int, String>{};
+            String? questionText;
+            String? itemId;
+            String? originalScoringNote;
+
+            for (final row in rows) {
+              final level = _parseMaturityLevel(row['maturity_level']);
+              final description = row['text_english']?.toString() ?? '';
+
+              if (level != null && level >= 1 && level <= 5) {
+                maturityDescriptions[level] = description;
+              }
+
+              // Use the first row to get basic item info
+              if (questionText == null) {
+                // For ECCM, use the Level 1 description as the question text
+                questionText = _generateEccmQuestionText(
+                    domain, subdomain, groupingKey, rows);
+                itemId =
+                    'ECCM_${type == FrameworkType.eccmFacility ? 'F' : 'O'}_${domain.replaceAll(' ', '_')}_${subdomain.replaceAll(' ', '_')}_$groupingKey';
+                originalScoringNote = row['scoring_note']?.toString();
+              }
+            }
+
+            // Create the consolidated AssessmentItem
+            final item = AssessmentItem(
+              id: itemId ?? '',
+              frameworkId: _getFrameworkId(type),
+              domain: domain,
+              subdomain: subdomain,
+              itemType: 'maturity_question',
+              questionText: questionText ?? '',
+              maturityDescriptions: maturityDescriptions,
+              responseType:
+                  'maturity_scale_1_5', // ECCM always uses maturity scale
+              scoringNote: originalScoringNote,
+            );
+
+            groupedData[domain]![subdomain]!.add(item);
+          }
+        }
       }
 
       final domains = _createDomainsFromGroupedData(groupedData);
@@ -210,6 +278,26 @@ class CsvLoaderService {
       print('Error loading $fileName: $e');
       return null;
     }
+  }
+
+  /// Generate a question text for ECCM items since they're not provided in the CSV
+  String _generateEccmQuestionText(String domain, String subdomain,
+      String groupingKey, List<Map<String, dynamic>> rows) {
+    // For ECCM, we can use the Level 1 description as the base question/statement
+    // since Level 1 typically describes the "not established" or baseline state
+    final level1Row = rows.firstWhere(
+      (row) => _parseMaturityLevel(row['maturity_level']) == 1,
+      orElse: () => rows.first,
+    );
+
+    final level1Description = level1Row['text_english']?.toString() ?? '';
+
+    if (level1Description.isNotEmpty) {
+      return level1Description;
+    }
+
+    // Fallback to generic question
+    return 'Assess the maturity level for $subdomain in $domain';
   }
 
   /// Load ADB framework

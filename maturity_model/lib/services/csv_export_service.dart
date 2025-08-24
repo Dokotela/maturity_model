@@ -171,6 +171,7 @@ class CsvExportService {
 
       return session;
     } catch (e) {
+      // ignore: avoid_print
       print('Error importing CSV: $e');
       return null;
     }

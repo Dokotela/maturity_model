@@ -4,3 +4,4 @@ export 'custom_tab_bar.dart';
 export 'domain_view.dart';
 export 'frameworks.dart';
 export 'organization_info_card.dart';
+export 'spider_chart.dart';
