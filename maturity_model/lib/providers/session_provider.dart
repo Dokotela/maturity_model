@@ -10,9 +10,9 @@ import 'package:maturity_model/maturity_model.dart'
         AssessmentSession,
         FrameworkType,
         Framework,
-        spiderConfigs,
-        SessionNotifier;
-import 'package:maturity_model/models/spider_graph.dart' show SpiderGraphPoint;
+        SessionNotifier,
+        SpiderChartDataPoint,
+        spiderConfigs;
 
 /// Provider for the CSV loader service
 final csvLoaderProvider = Provider<CsvLoaderService>((ref) {
@@ -53,31 +53,29 @@ final allFrameworksCompletionProvider =
   return session.progressByFramework;
 });
 
-/// Provider for spider graph data for a specific framework
+/// Provider for spider graph data for IS4H frameworks
 final spiderGraphDataProvider =
-    Provider.family<List<SpiderGraphPoint>, FrameworkType>((ref, type) {
+    Provider.family<List<SpiderChartDataPoint>, FrameworkType>((ref, type) {
   final framework = ref.watch(frameworkProvider(type));
   if (framework == null) return [];
 
   final config = spiderConfigs[type];
   if (config == null) return [];
 
-  final points = <SpiderGraphPoint>[];
+  final points = <SpiderChartDataPoint>[];
 
   for (final configDomain in config.domains) {
     double score = 0.0;
     int count = 0;
 
-    // For IS4H frameworks with subdomains
-    if (configDomain.subdomains != null &&
-        configDomain.subdomains!.isNotEmpty) {
-      for (final domain in framework.domains) {
-        if (domain.name
-                .toLowerCase()
-                .contains(configDomain.name.toLowerCase()) ||
-            domain.id.toLowerCase().contains(configDomain.name.toLowerCase())) {
+    // IS4H frameworks have subdomains in the config
+    for (final domain in framework.domains) {
+      if (domain.name.toLowerCase().contains(configDomain.name.toLowerCase()) ||
+          domain.id.toLowerCase().contains(configDomain.name.toLowerCase())) {
+        if (configDomain.subdomains != null &&
+            configDomain.subdomains!.isNotEmpty) {
+          // Calculate score based on matching subdomains
           for (final subdomain in domain.subdomains) {
-            // Check if this subdomain matches any in the config
             for (final configSubdomain in configDomain.subdomains!) {
               if (subdomain.name
                   .toLowerCase()
@@ -91,15 +89,8 @@ final spiderGraphDataProvider =
               }
             }
           }
-        }
-      }
-    } else {
-      // For frameworks without subdomain structure (BPMN, ECCM, ADB)
-      for (final domain in framework.domains) {
-        if (domain.name
-                .toLowerCase()
-                .contains(configDomain.name.toLowerCase()) ||
-            domain.id.toLowerCase().contains(configDomain.name.toLowerCase())) {
+        } else {
+          // Use overall domain average if no specific subdomains in config
           final domainScore = domain.averageScore;
           if (domainScore > 0) {
             score += domainScore;
@@ -109,7 +100,7 @@ final spiderGraphDataProvider =
       }
     }
 
-    points.add(SpiderGraphPoint(
+    points.add(SpiderChartDataPoint(
       label: configDomain.displayName,
       value: count > 0 ? score / count : 0.0,
       maxValue: 5.0,

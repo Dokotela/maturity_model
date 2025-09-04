@@ -1,21 +1,8 @@
-// lib/models/framework_model.dart
+// lib/config/spider_graph.dart
 
-import 'package:maturity_model/models/framework_type.dart' show FrameworkType;
+import 'package:maturity_model/maturity_model.dart' show FrameworkType;
 
-/// Data class for spider graph points
-class SpiderGraphPoint {
-  final String label;
-  final double value;
-  final double maxValue;
-
-  SpiderGraphPoint({
-    required this.label,
-    required this.value,
-    required this.maxValue,
-  });
-}
-
-/// Configuration for spider graph domains
+/// Configuration for spider graph visualization
 class SpiderGraphConfig {
   final FrameworkType framework;
   final List<SpiderGraphDomain> domains;
@@ -26,6 +13,7 @@ class SpiderGraphConfig {
   });
 }
 
+/// Represents a domain in the spider graph
 class SpiderGraphDomain {
   final String name;
   final String displayName;
@@ -38,7 +26,7 @@ class SpiderGraphDomain {
   });
 }
 
-/// Spider graph configurations for each framework
+/// Spider graph configurations for IS4H frameworks only
 final Map<FrameworkType, SpiderGraphConfig> spiderConfigs = {
   FrameworkType.is4hInstitutional: SpiderGraphConfig(
     framework: FrameworkType.is4hInstitutional,
@@ -87,39 +75,6 @@ final Map<FrameworkType, SpiderGraphConfig> spiderConfigs = {
         name: 'Innovation',
         displayName: 'Innovation',
         subdomains: ['Culture', 'Resources', 'Implementation'],
-      ),
-    ],
-  ),
-  FrameworkType.bpmn: SpiderGraphConfig(
-    framework: FrameworkType.bpmn,
-    domains: [
-      SpiderGraphDomain(
-        name: 'Institutional Standards',
-        displayName: 'Standards',
-      ),
-      SpiderGraphDomain(
-        name: 'Stakeholder Management',
-        displayName: 'Stakeholders',
-      ),
-      SpiderGraphDomain(
-        name: 'Adoption Processes',
-        displayName: 'Adoption',
-      ),
-      SpiderGraphDomain(
-        name: 'Privacy Security',
-        displayName: 'Security',
-      ),
-      SpiderGraphDomain(
-        name: 'Skills and Expertise',
-        displayName: 'Skills',
-      ),
-      SpiderGraphDomain(
-        name: 'Knowledge Assets',
-        displayName: 'Knowledge',
-      ),
-      SpiderGraphDomain(
-        name: 'Goals and Measurement',
-        displayName: 'Goals',
       ),
     ],
   ),

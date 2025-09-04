@@ -40,6 +40,11 @@ class _AssessmentScreenState extends ConsumerState<AssessmentScreen>
     ref.watch(sessionProvider);
     final framework = ref.watch(frameworkProvider(widget.frameworkType));
 
+    // Get responsive sizing
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+    final baseSpacing = textTheme.bodyMedium!.fontSize!;
+
     if (framework == null || framework.domains.isEmpty) {
       return _LoadingOrEmptyScaffold(
         frameworkType: widget.frameworkType,
@@ -70,7 +75,7 @@ class _AssessmentScreenState extends ConsumerState<AssessmentScreen>
         ),
         bottom: framework.domains.length > 1
             ? PreferredSize(
-                preferredSize: const Size.fromHeight(48.0),
+                preferredSize: Size.fromHeight(baseSpacing * 3),
                 child: CustomTabBar(
                   tabController: _tabController!,
                   framework: framework,
@@ -111,6 +116,10 @@ class _LoadingOrEmptyScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+    final baseSpacing = textTheme.bodyMedium!.fontSize!;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(frameworkType.displayName),
@@ -120,11 +129,12 @@ class _LoadingOrEmptyScaffold extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const CircularProgressIndicator(),
-            const SizedBox(height: 16),
+            SizedBox(height: baseSpacing),
             Text(
               isLoading
                   ? 'Loading framework...'
                   : 'No data found for this framework',
+              style: textTheme.bodyLarge,
             ),
           ],
         ),
@@ -145,16 +155,21 @@ class _AssessmentAppBarTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           frameworkType.displayName,
-          style: const TextStyle(fontSize: 18),
+          style: textTheme.titleMedium,
         ),
         Text(
           _buildProgressText(),
-          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.normal),
+          style: textTheme.bodySmall?.copyWith(
+            fontWeight: FontWeight.normal,
+          ),
         ),
       ],
     );
@@ -175,11 +190,6 @@ class _AssessmentAppBarTitle extends StatelessWidget {
             .where((item) => item.response != null && item.response! > 0)
             .length;
       }
-    }
-
-    // For debugging - show the actual counts
-    if (frameworkType == FrameworkType.bpmn) {
-      return '$answeredItems of $totalItems answered (${completion.toStringAsFixed(1)}%)';
     }
 
     // For other frameworks, show the standard display

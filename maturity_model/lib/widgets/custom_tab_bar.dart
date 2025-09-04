@@ -19,15 +19,19 @@ class CustomTabBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+    final baseSpacing = textTheme.bodyMedium!.fontSize!;
+
     return Container(
-      height: 48,
+      height: baseSpacing * 3,
       decoration: BoxDecoration(
-        color: Theme.of(context).scaffoldBackgroundColor,
+        color: theme.scaffoldBackgroundColor,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.1),
-            offset: const Offset(0, 2),
-            blurRadius: 4,
+            offset: Offset(0, baseSpacing * 0.125),
+            blurRadius: baseSpacing * 0.25,
           ),
         ],
       ),
@@ -68,8 +72,12 @@ class _TabBarContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+    final baseSpacing = textTheme.bodyMedium!.fontSize!;
+
     return Theme(
-      data: Theme.of(context).copyWith(
+      data: theme.copyWith(
         splashColor: Colors.transparent,
         highlightColor: Colors.transparent,
       ),
@@ -77,18 +85,19 @@ class _TabBarContent extends StatelessWidget {
         controller: tabController,
         isScrollable: true,
         tabAlignment: TabAlignment.start,
-        padding: const EdgeInsets.only(left: 48, right: 48),
-        indicatorSize: TabBarIndicatorSize.label,
-        indicatorWeight: 3,
-        labelColor: Theme.of(context).primaryColor,
-        unselectedLabelColor: Colors.grey[600],
-        labelStyle: const TextStyle(
-          fontWeight: FontWeight.w600,
-          fontSize: 14,
+        padding: EdgeInsets.only(
+          left: baseSpacing * 3,
+          right: baseSpacing * 3,
         ),
-        unselectedLabelStyle: const TextStyle(
+        indicatorSize: TabBarIndicatorSize.label,
+        indicatorWeight: baseSpacing * 0.1875,
+        labelColor: theme.primaryColor,
+        unselectedLabelColor: Colors.grey[600],
+        labelStyle: textTheme.bodyMedium?.copyWith(
+          fontWeight: FontWeight.w600,
+        ),
+        unselectedLabelStyle: textTheme.bodyMedium?.copyWith(
           fontWeight: FontWeight.normal,
-          fontSize: 14,
         ),
         tabs: framework.domains.map((domain) {
           return Tab(
@@ -122,10 +131,14 @@ class _TabLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+    final baseSpacing = textTheme.bodyMedium!.fontSize!;
+
     final tabText = _abbreviations[domainName] ?? domainName;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
+      padding: EdgeInsets.symmetric(horizontal: baseSpacing * 0.75),
       child: Text(
         tabText,
         maxLines: 1,
@@ -147,6 +160,10 @@ class _ScrollIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+    final baseSpacing = textTheme.bodyMedium!.fontSize!;
+
     return Positioned(
       left: isLeft ? 0 : null,
       right: isLeft ? null : 0,
@@ -158,27 +175,19 @@ class _ScrollIndicator extends StatelessWidget {
           opacity: isVisible ? 1.0 : 0.0,
           duration: const Duration(milliseconds: 200),
           child: Container(
-            width: 48,
+            width: baseSpacing * 3,
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: isLeft
                     ? [
-                        Theme.of(context).scaffoldBackgroundColor,
-                        Theme.of(context)
-                            .scaffoldBackgroundColor
-                            .withValues(alpha: 0.7),
-                        Theme.of(context)
-                            .scaffoldBackgroundColor
-                            .withValues(alpha: 0),
+                        theme.scaffoldBackgroundColor,
+                        theme.scaffoldBackgroundColor.withValues(alpha: 0.7),
+                        theme.scaffoldBackgroundColor.withValues(alpha: 0),
                       ]
                     : [
-                        Theme.of(context)
-                            .scaffoldBackgroundColor
-                            .withValues(alpha: 0),
-                        Theme.of(context)
-                            .scaffoldBackgroundColor
-                            .withValues(alpha: 0.7),
-                        Theme.of(context).scaffoldBackgroundColor,
+                        theme.scaffoldBackgroundColor.withValues(alpha: 0),
+                        theme.scaffoldBackgroundColor.withValues(alpha: 0.7),
+                        theme.scaffoldBackgroundColor,
                       ],
                 stops: const [0.0, 0.5, 1.0],
               ),
@@ -186,7 +195,7 @@ class _ScrollIndicator extends StatelessWidget {
             child: Center(
               child: Icon(
                 isLeft ? Icons.chevron_left : Icons.chevron_right,
-                size: 24,
+                size: baseSpacing * 1.5,
                 color: Colors.grey,
               ),
             ),

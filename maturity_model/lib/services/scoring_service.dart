@@ -98,75 +98,14 @@ class ScoringService {
     return totalScore / answeredItems.length;
   }
 
-  /// Get spider chart data for different framework types
+  /// Get spider chart data for IS4H framework types
   List<SpiderChartResult> getSpiderChartData(
       FrameworkType frameworkType, Framework framework) {
-    switch (frameworkType) {
-      case FrameworkType.bpmn:
-        return _getBpmnSpiderCharts(framework);
-      case FrameworkType.adb:
-        return _getAdbSpiderCharts(framework);
-      case FrameworkType.eccmFacility:
-      case FrameworkType.eccmOrganization:
-        return _getEccmSpiderCharts(framework);
-      case FrameworkType.is4hInstitutional:
-      case FrameworkType.is4hCountry:
-        return _getIs4hSpiderCharts(framework);
-    }
+    // Both IS4H frameworks use the same scoring approach
+    return _getIs4hSpiderCharts(framework);
   }
 
-  List<SpiderChartResult> _getBpmnSpiderCharts(Framework framework) {
-    final domainScores = calculateDomainScores(framework);
-    final dataPoints = SpiderChartConfig.getDataPointsForFramework(
-      FrameworkType.bpmn,
-      domainScores,
-    );
-
-    return [
-      SpiderChartResult(
-        title: 'BPM+ Clinical Practice Guideline Assessment',
-        dataPoints: dataPoints,
-        overallScore: _calculateOverallScore(domainScores),
-      ),
-    ];
-  }
-
-  List<SpiderChartResult> _getAdbSpiderCharts(Framework framework) {
-    final domainScores = calculateDomainScores(framework);
-    final dataPoints = SpiderChartConfig.getDataPointsForFramework(
-      FrameworkType.adb,
-      domainScores,
-    );
-
-    return [
-      SpiderChartResult(
-        title: 'ADB Digital Health Readiness',
-        dataPoints: dataPoints,
-        overallScore: _calculateOverallScore(domainScores),
-      ),
-    ];
-  }
-
-  List<SpiderChartResult> _getEccmSpiderCharts(Framework framework) {
-    final domainScores = calculateDomainScores(framework);
-    final dataPoints = SpiderChartConfig.getDataPointsForFramework(
-      framework.type,
-      domainScores,
-    );
-
-    final title = framework.type == FrameworkType.eccmFacility
-        ? 'ECCM Facility Assessment'
-        : 'ECCM Organization Assessment';
-
-    return [
-      SpiderChartResult(
-        title: title,
-        dataPoints: dataPoints,
-        overallScore: _calculateOverallScore(domainScores),
-      ),
-    ];
-  }
-
+  /// Generate spider charts for IS4H frameworks
   List<SpiderChartResult> _getIs4hSpiderCharts(Framework framework) {
     final List<SpiderChartResult> results = [];
 
@@ -195,8 +134,13 @@ class ScoringService {
       domainScores,
     );
 
+    // Determine the title based on framework type
+    final overallTitle = framework.type == FrameworkType.is4hInstitutional
+        ? 'IS4H Institutional Overall Assessment'
+        : 'IS4H Country Overall Assessment';
+
     results.add(SpiderChartResult(
-      title: 'IS4H Overall Assessment',
+      title: overallTitle,
       dataPoints: overallDataPoints,
       overallScore: _calculateOverallScore(domainScores),
       isOverallChart: true,

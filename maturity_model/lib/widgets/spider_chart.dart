@@ -46,17 +46,21 @@ class SpiderChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+    final baseSpacing = textTheme.bodyMedium!.fontSize!;
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         if (title != null) ...[
           Text(
             title!,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            style: textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: baseSpacing),
         ],
         SizedBox(
           width: size,
@@ -69,6 +73,7 @@ class SpiderChart extends StatelessWidget {
               gridColor: gridColor,
               labelColor: labelColor,
               showValues: showValues,
+              baseSpacing: baseSpacing, // Pass base spacing to painter
             ),
           ),
         ),
@@ -84,6 +89,7 @@ class _SpiderChartPainter extends CustomPainter {
   final Color gridColor;
   final Color labelColor;
   final bool showValues;
+  final double baseSpacing;
 
   _SpiderChartPainter({
     required this.dataPoints,
@@ -92,6 +98,7 @@ class _SpiderChartPainter extends CustomPainter {
     required this.gridColor,
     required this.labelColor,
     required this.showValues,
+    required this.baseSpacing,
   });
 
   @override
@@ -99,8 +106,8 @@ class _SpiderChartPainter extends CustomPainter {
     if (dataPoints.isEmpty) return;
 
     final center = Offset(size.width / 2, size.height / 2);
-    final radius =
-        math.min(size.width, size.height) / 2 - 60; // Padding for labels
+    final labelPadding = baseSpacing * 3.75;
+    final radius = math.min(size.width, size.height) / 2 - labelPadding;
     final numberOfPoints = dataPoints.length;
     final angleStep = 2 * math.pi / numberOfPoints;
 
@@ -111,14 +118,14 @@ class _SpiderChartPainter extends CustomPainter {
     _drawDataShape(canvas, center, radius, angleStep);
 
     // Draw labels
-    _drawLabels(canvas, center, radius + 30, angleStep);
+    _drawLabels(canvas, center, radius + baseSpacing * 1.875, angleStep);
   }
 
   void _drawGrid(Canvas canvas, Offset center, double radius,
       int numberOfPoints, double angleStep) {
     final gridPaint = Paint()
       ..color = gridColor
-      ..strokeWidth = 1
+      ..strokeWidth = baseSpacing * 0.0625
       ..style = PaintingStyle.stroke;
 
     // Draw concentric circles (grid levels)
@@ -148,7 +155,7 @@ class _SpiderChartPainter extends CustomPainter {
 
     final strokePaint = Paint()
       ..color = strokeColor
-      ..strokeWidth = 2
+      ..strokeWidth = baseSpacing * 0.125
       ..style = PaintingStyle.stroke;
 
     final path = Path();
@@ -185,8 +192,9 @@ class _SpiderChartPainter extends CustomPainter {
       ..color = strokeColor
       ..style = PaintingStyle.fill;
 
+    final pointRadius = baseSpacing * 0.25;
     for (final point in points) {
-      canvas.drawCircle(point, 4, pointPaint);
+      canvas.drawCircle(point, pointRadius, pointPaint);
     }
   }
 
@@ -204,7 +212,7 @@ class _SpiderChartPainter extends CustomPainter {
           text: dataPoints[i].label,
           style: TextStyle(
             color: labelColor,
-            fontSize: 12,
+            fontSize: baseSpacing * 0.75,
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -228,7 +236,7 @@ class _SpiderChartPainter extends CustomPainter {
             text: valueText,
             style: TextStyle(
               color: labelColor.withValues(alpha: 0.7),
-              fontSize: 10,
+              fontSize: baseSpacing * 0.625,
             ),
           ),
           textDirection: TextDirection.ltr,
@@ -237,7 +245,7 @@ class _SpiderChartPainter extends CustomPainter {
 
         final valueOffset = Offset(
           labelPoint.dx - valuePainter.width / 2,
-          labelPoint.dy + textPainter.height / 2 + 2,
+          labelPoint.dy + textPainter.height / 2 + baseSpacing * 0.125,
         );
 
         valuePainter.paint(canvas, valueOffset);
@@ -251,91 +259,21 @@ class _SpiderChartPainter extends CustomPainter {
   }
 }
 
-/// Spider chart configuration for different framework types
+/// Spider chart configuration for IS4H framework types
 class SpiderChartConfig {
   /// Get spider chart data points for a given framework type
   static List<SpiderChartDataPoint> getDataPointsForFramework(
     FrameworkType frameworkType,
     Map<String, double> domainScores,
   ) {
-    switch (frameworkType) {
-      case FrameworkType.bpmn:
-        return _getBpmnDataPoints(domainScores);
-      case FrameworkType.adb:
-        return _getAdbDataPoints(domainScores);
-      case FrameworkType.eccmFacility:
-      case FrameworkType.eccmOrganization:
-        return _getEccmDataPoints(domainScores);
-      case FrameworkType.is4hInstitutional:
-      case FrameworkType.is4hCountry:
-        return _getIs4hDataPoints(domainScores);
-    }
+    // Both IS4H frameworks use the same domain structure
+    return _getIs4hDataPoints(domainScores);
   }
 
-  static List<SpiderChartDataPoint> _getBpmnDataPoints(
-      Map<String, double> domainScores) {
-    final domains = [
-      'Institutional Standards/Guidelines/Policies',
-      'Stakeholder Management',
-      'Adoption Processes',
-      'Privacy Security Confidentiality',
-      'Skills and Expertise',
-      'Knowledge Assets Tools and Automation',
-      'Goals and Measurement'
-    ];
-
-    return domains
-        .map((domain) => SpiderChartDataPoint(
-              label: _truncateLabel(domain),
-              value: domainScores[domain] ?? 0.0,
-              maxValue: 5.0,
-            ))
-        .toList();
-  }
-
-  static List<SpiderChartDataPoint> _getAdbDataPoints(
-      Map<String, double> domainScores) {
-    final domains = [
-      'Core Readiness',
-      'Technological Readiness',
-      'Learning Readiness',
-      'Societal Readiness'
-    ];
-
-    return domains
-        .map((domain) => SpiderChartDataPoint(
-              label: domain,
-              value: domainScores[domain] ?? 0.0,
-              maxValue: 5.0,
-            ))
-        .toList();
-  }
-
-  static List<SpiderChartDataPoint> _getEccmDataPoints(
-      Map<String, double> domainScores) {
-    final domains = [
-      'Governance & Leadership',
-      'Technology',
-      'Interoperability',
-      'Patient Centeredness',
-      'Management of Technical Resources',
-      'HIT Services and Functions',
-      'Data Ownership and Data Quality',
-      'Analytics and Business Intelligence',
-      'HIT Learning Health System'
-    ];
-
-    return domains
-        .map((domain) => SpiderChartDataPoint(
-              label: _truncateLabel(domain),
-              value: domainScores[domain] ?? 0.0,
-              maxValue: 5.0,
-            ))
-        .toList();
-  }
-
+  /// Get IS4H data points (used by both institutional and country levels)
   static List<SpiderChartDataPoint> _getIs4hDataPoints(
       Map<String, double> domainScores) {
+    // IS4H framework domains
     final domains = [
       'Data Management and Information Technology',
       'Management and Governance',
@@ -345,16 +283,32 @@ class SpiderChartConfig {
 
     return domains
         .map((domain) => SpiderChartDataPoint(
-              label: _truncateLabel(domain),
+              label: _getShortLabel(domain),
               value: domainScores[domain] ?? 0.0,
               maxValue: 5.0,
             ))
         .toList();
   }
 
+  /// Get shortened label for display on chart
+  static String _getShortLabel(String fullDomainName) {
+    switch (fullDomainName) {
+      case 'Data Management and Information Technology':
+        return 'Data & IT';
+      case 'Management and Governance':
+        return 'Management';
+      case 'Knowledge Management and Sharing':
+        return 'Knowledge';
+      case 'Innovation':
+        return 'Innovation';
+      default:
+        return _truncateLabel(fullDomainName);
+    }
+  }
+
   /// Truncate long labels to fit better on the chart
   static String _truncateLabel(String label) {
-    if (label.length <= 20) return label;
-    return '${label.substring(0, 17)}...';
+    if (label.length <= 15) return label;
+    return '${label.substring(0, 12)}...';
   }
 }

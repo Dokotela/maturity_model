@@ -1,19 +1,7 @@
 // lib/screens/main_navigation_screen.dart
 
-import 'package:flutter/material.dart'
-    show
-        NavigationDestination,
-        Icon,
-        BuildContext,
-        Widget,
-        Icons,
-        IndexedStack,
-        NavigationBar,
-        Scaffold,
-        State,
-        StatefulWidget;
-import 'package:maturity_model/maturity_model.dart'
-    show HomeScreen, ResultsScreen, SettingsScreen;
+import 'package:flutter/material.dart';
+import 'package:maturity_model/maturity_model.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   const MainNavigationScreen({super.key});
@@ -25,31 +13,27 @@ class MainNavigationScreen extends StatefulWidget {
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int _selectedIndex = 0;
 
-  final List<NavigationDestination> _destinations = const [
-    NavigationDestination(
-      icon: Icon(Icons.home_outlined),
-      selectedIcon: Icon(Icons.home),
-      label: 'Home',
-    ),
-    NavigationDestination(
-      icon: Icon(Icons.analytics_outlined),
-      selectedIcon: Icon(Icons.analytics),
-      label: 'Results',
-    ),
-    NavigationDestination(
-      icon: Icon(Icons.settings_outlined),
-      selectedIcon: Icon(Icons.settings),
-      label: 'Settings',
-    ),
-  ];
-
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+
+    // Calculate responsive icon size based on text scale
+    final baseSpacing = textTheme.bodyMedium!.fontSize!;
+    final iconSize =
+        baseSpacing * 2.0; // 32px mobile, 48px tablet, 64px desktop
+
     return Scaffold(
       body: IndexedStack(
         index: _selectedIndex,
         children: [
           const HomeScreen(),
+          Center(
+            child: Text(
+              'Assessments List',
+              style: textTheme.headlineSmall,
+            ),
+          ),
           const ResultsScreen(),
           const SettingsScreen(),
         ],
@@ -61,7 +45,23 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             _selectedIndex = index;
           });
         },
-        destinations: _destinations,
+        destinations: [
+          NavigationDestination(
+            icon: Icon(Icons.home_outlined, size: iconSize),
+            selectedIcon: Icon(Icons.home, size: iconSize),
+            label: 'Home',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.analytics_outlined, size: iconSize),
+            selectedIcon: Icon(Icons.analytics, size: iconSize),
+            label: 'Results',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.settings_outlined, size: iconSize),
+            selectedIcon: Icon(Icons.settings, size: iconSize),
+            label: 'Settings',
+          ),
+        ],
       ),
     );
   }

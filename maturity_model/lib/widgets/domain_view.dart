@@ -1,9 +1,9 @@
-// lib/widgets/domain_view.dart - Optimized version
+// lib/widgets/domain_view.dart - IS4H Only Version
 
 import 'package:flutter/material.dart';
 import 'package:maturity_model/maturity_model.dart';
 
-/// Main domain view widget that handles both BPMN and standard frameworks
+/// Main domain view widget for IS4H frameworks
 class DomainView extends StatelessWidget {
   final Domain domain;
   final Framework framework;
@@ -18,15 +18,7 @@ class DomainView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // For BPMN, use special rubric view
-    if (frameworkType == FrameworkType.bpmn) {
-      return BpmnRubricView(
-        domain: domain,
-        frameworkType: frameworkType,
-      );
-    }
-
-    // For other frameworks, use optimized standard view
+    // Use optimized standard view for IS4H
     return _OptimizedStandardDomainView(
       domain: domain,
       frameworkType: frameworkType,
@@ -81,163 +73,53 @@ class _OptimizedStandardDomainViewState
   Widget build(BuildContext context) {
     super.build(context); // Required for AutomaticKeepAliveClientMixin
 
-    // Calculate total item count: 1 header + subdomain count
-    final itemCount = 1 + widget.domain.subdomains.length;
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+    final baseSpacing = textTheme.bodyMedium!.fontSize!;
 
-    return Scrollbar(
+    final subdomains = widget.domain.subdomains;
+
+    return ListView.builder(
       controller: _scrollController,
-      thumbVisibility: true,
-      child: ListView.builder(
-        controller: _scrollController,
-        padding: const EdgeInsets.all(16),
-        itemCount: itemCount,
-        itemBuilder: (context, index) {
-          // First item is always the header
-          if (index == 0) {
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: _DomainHeader(domain: widget.domain),
-            );
-          }
+      padding: EdgeInsets.all(baseSpacing),
+      itemCount: subdomains.length,
+      itemBuilder: (context, index) {
+        final subdomain = subdomains[index];
+        final isExpanded = _expandedStates[subdomain.id] ?? true;
 
-          // Subsequent items are subdomains
-          final subdomainIndex = index - 1;
-          final subdomain = widget.domain.subdomains[subdomainIndex];
-
-          return _LazySubdomainSection(
-            key: ValueKey(subdomain.id),
-            subdomain: subdomain,
-            frameworkType: widget.frameworkType,
-            isExpanded: _expandedStates[subdomain.id] ?? true,
-            onExpansionChanged: (expanded) {
-              setState(() {
-                _expandedStates[subdomain.id] = expanded;
-              });
-            },
-          );
-        },
-      ),
-    );
-  }
-}
-
-/// Domain header card showing progress
-class _DomainHeader extends StatelessWidget {
-  final Domain domain;
-
-  const _DomainHeader({required this.domain});
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              domain.name,
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            const SizedBox(height: 8),
-            LinearProgressIndicator(
-              value: domain.averageScore / 5,
-              backgroundColor: Colors.grey[300],
-              valueColor: AlwaysStoppedAnimation<Color>(
-                _getColorForScore(domain.averageScore),
+        return Card(
+          margin: EdgeInsets.only(bottom: baseSpacing * 0.75),
+          child: Theme(
+            data: theme.copyWith(dividerColor: Colors.transparent),
+            child: ExpansionTile(
+              initiallyExpanded: isExpanded,
+              onExpansionChanged: (expanded) {
+                setState(() {
+                  _expandedStates[subdomain.id] = expanded;
+                });
+              },
+              title: Text(
+                subdomain.name,
+                style: textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Average Score: ${domain.averageScore.toStringAsFixed(1)}/5',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Color _getColorForScore(double score) {
-    if (score < 2) return Colors.red;
-    if (score < 3) return Colors.orange;
-    if (score < 4) return Colors.yellow[700]!;
-    return Colors.green;
-  }
-}
-
-/// Lazy-loading subdomain section that only builds children when expanded
-class _LazySubdomainSection extends StatelessWidget {
-  final Subdomain subdomain;
-  final FrameworkType frameworkType;
-  final bool isExpanded;
-  final ValueChanged<bool> onExpansionChanged;
-
-  const _LazySubdomainSection({
-    super.key,
-    required this.subdomain,
-    required this.frameworkType,
-    required this.isExpanded,
-    required this.onExpansionChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    // Calculate completion status
-    final answeredCount = subdomain.items
-        .where((item) => item.response != null && item.response! > 0)
-        .length;
-    final allAnswered =
-        answeredCount == subdomain.items.length && subdomain.items.isNotEmpty;
-
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      child: Theme(
-        data: Theme.of(context).copyWith(
-          dividerColor: Colors.transparent,
-        ),
-        child: ExpansionTile(
-          key: ValueKey(subdomain.id),
-          initiallyExpanded: isExpanded,
-          maintainState: true,
-          onExpansionChanged: onExpansionChanged,
-          tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          childrenPadding: EdgeInsets.zero,
-          expandedCrossAxisAlignment: CrossAxisAlignment.start,
-          expandedAlignment: Alignment.topLeft,
-          leading: allAnswered
-              ? const Icon(
-                  Icons.check_circle,
-                  color: Colors.green,
-                  size: 24,
-                )
-              : null,
-          title: Text(
-            subdomain.name,
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: allAnswered ? Colors.green[700] : null,
+              subtitle: Text(
+                '${subdomain.items.length} questions',
+                style: textTheme.bodySmall?.copyWith(
+                  color: Colors.grey[600],
+                ),
+              ),
+              children: subdomain.items.map((item) {
+                return AssessmentItemWidget(
+                  item: item,
+                  frameworkType: widget.frameworkType,
+                );
+              }).toList(),
             ),
           ),
-          subtitle: Text(
-            '$answeredCount of ${subdomain.items.length} completed',
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey[600],
-            ),
-          ),
-          // Only build children when expanded
-          children: isExpanded
-              ? subdomain.items
-                  .map((item) => AssessmentItemWidget(
-                        key: ValueKey(item.id),
-                        item: item,
-                        frameworkType: frameworkType,
-                      ))
-                  .toList()
-              : [],
-        ),
-      ),
+        );
+      },
     );
   }
 }

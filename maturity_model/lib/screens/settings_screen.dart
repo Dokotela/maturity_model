@@ -10,39 +10,43 @@ class SettingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+    final baseSpacing = textTheme.bodyMedium!.fontSize!;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Settings'),
       ),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(baseSpacing),
         children: [
           // Data Management Section
           Text(
             'Data Management',
-            style: Theme.of(context).textTheme.titleLarge,
+            style: textTheme.titleLarge,
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: baseSpacing * 0.75),
           const _DataManagementCard(),
 
-          const SizedBox(height: 24),
+          SizedBox(height: baseSpacing * 1.5),
 
           // Session Info Section - only this needs provider
           Text(
             'Session Information',
-            style: Theme.of(context).textTheme.titleLarge,
+            style: textTheme.titleLarge,
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: baseSpacing * 0.75),
           const _SessionInfoCard(),
 
-          const SizedBox(height: 24),
+          SizedBox(height: baseSpacing * 1.5),
 
           // About Section - completely static
           Text(
             'About',
-            style: Theme.of(context).textTheme.titleLarge,
+            style: textTheme.titleLarge,
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: baseSpacing * 0.75),
           const _AboutCard(),
         ],
       ),
@@ -56,6 +60,9 @@ class _DataManagementCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final baseSpacing = theme.textTheme.bodyMedium!.fontSize!;
+
     return Card(
       child: Column(
         children: [
@@ -66,7 +73,7 @@ class _DataManagementCard extends ConsumerWidget {
             trailing: const Icon(Icons.arrow_forward_ios),
             onTap: () => _exportData(context, ref),
           ),
-          const Divider(height: 1),
+          Divider(height: baseSpacing * 0.0625),
           ListTile(
             leading: const Icon(Icons.upload),
             title: const Text('Import Data'),
@@ -74,7 +81,7 @@ class _DataManagementCard extends ConsumerWidget {
             trailing: const Icon(Icons.arrow_forward_ios),
             onTap: () => _importData(context, ref),
           ),
-          const Divider(height: 1),
+          Divider(height: baseSpacing * 0.0625),
           ListTile(
             leading: const Icon(Icons.delete_outline, color: Colors.red),
             title: const Text('Clear All Data'),
@@ -166,6 +173,10 @@ class _SessionInfoCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+    final baseSpacing = textTheme.bodyMedium!.fontSize!;
+
     // Only watch specific fields we need
     final session = ref.watch(sessionProvider.select((s) => (
           sessionId: s.sessionId,
@@ -176,7 +187,7 @@ class _SessionInfoCard extends ConsumerWidget {
 
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(baseSpacing),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -208,43 +219,65 @@ class _InfoRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+    final baseSpacing = textTheme.bodyMedium!.fontSize!;
+
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: EdgeInsets.symmetric(vertical: baseSpacing * 0.25),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(color: Colors.grey)),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.w500)),
+          Text(
+            label,
+            style: textTheme.bodyMedium?.copyWith(
+              color: Colors.grey,
+            ),
+          ),
+          Text(
+            value,
+            style: textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w500,
+            ),
+          ),
         ],
       ),
     );
   }
 }
 
-// Completely static about card
+// About card with responsive sizing
 class _AboutCard extends StatelessWidget {
   const _AboutCard();
 
   @override
   Widget build(BuildContext context) {
-    return const Card(
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+    final baseSpacing = textTheme.bodyMedium!.fontSize!;
+
+    return Card(
       child: Padding(
-        padding: EdgeInsets.all(16),
+        padding: EdgeInsets.all(baseSpacing),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               'Healthcare Maturity Assessment Tool',
-              style: TextStyle(fontWeight: FontWeight.bold),
+              style: textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
-            SizedBox(height: 8),
-            Text('Version 1.0.0'),
-            SizedBox(height: 8),
+            SizedBox(height: baseSpacing * 0.5),
+            Text(
+              'Version 1.0.0',
+              style: textTheme.bodyMedium,
+            ),
+            SizedBox(height: baseSpacing * 0.5),
             Text(
               'A comprehensive tool for assessing healthcare information '
-              'system maturity across multiple frameworks including IS4H, '
-              'ECCM, BPMN, and ADB standards.',
-              style: TextStyle(fontSize: 13),
+              'system maturity using the IS4H standards.',
+              style: textTheme.bodySmall,
             ),
           ],
         ),

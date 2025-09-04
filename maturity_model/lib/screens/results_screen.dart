@@ -34,6 +34,10 @@ class _ResultsBody extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final completionMap = ref.watch(allFrameworksCompletionProvider);
 
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+    final baseSpacing = textTheme.bodyMedium!.fontSize!;
+
     // Calculate statistics once
     final activeFrameworks =
         completionMap.entries.where((e) => e.value > 0).toList();
@@ -44,7 +48,7 @@ class _ResultsBody extends ConsumerWidget {
             activeFrameworks.length;
 
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(baseSpacing),
       children: [
         // Overall Progress Card
         _OverallProgressCard(
@@ -53,14 +57,14 @@ class _ResultsBody extends ConsumerWidget {
           totalCount: FrameworkType.values.length,
         ),
 
-        const SizedBox(height: 16),
+        SizedBox(height: baseSpacing),
 
         // Individual Framework Results
         Text(
           'Framework Results',
-          style: Theme.of(context).textTheme.titleLarge,
+          style: textTheme.titleLarge,
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: baseSpacing * 0.75),
 
         if (activeFrameworks.isEmpty)
           const _EmptyStateMessage()
@@ -88,17 +92,21 @@ class _OverallProgressCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+    final baseSpacing = textTheme.bodyMedium!.fontSize!;
+
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(baseSpacing),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               'Overall Progress',
-              style: Theme.of(context).textTheme.titleMedium,
+              style: textTheme.titleMedium,
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: baseSpacing * 0.5),
             Row(
               children: [
                 Expanded(
@@ -107,16 +115,13 @@ class _OverallProgressCard extends StatelessWidget {
                     children: [
                       Text(
                         '${overallAverage.toStringAsFixed(1)}%',
-                        style: Theme.of(context)
-                            .textTheme
-                            .headlineMedium
-                            ?.copyWith(
-                              color: _getColorForCompletion(overallAverage),
-                            ),
+                        style: textTheme.headlineMedium?.copyWith(
+                          color: _getColorForCompletion(overallAverage),
+                        ),
                       ),
                       Text(
                         '$activeCount of $totalCount frameworks started',
-                        style: Theme.of(context).textTheme.bodySmall,
+                        style: textTheme.bodySmall,
                       ),
                     ],
                   ),
@@ -158,14 +163,18 @@ class _FrameworkResultTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final framework = ref.watch(frameworkProvider(frameworkType));
 
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+    final baseSpacing = textTheme.bodyMedium!.fontSize!;
+
     return Card(
-      margin: const EdgeInsets.only(bottom: 8),
+      margin: EdgeInsets.only(bottom: baseSpacing * 0.5),
       child: ListTile(
         title: Text(frameworkType.displayName),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 8),
+            SizedBox(height: baseSpacing * 0.5),
             LinearProgressIndicator(
               value: completion / 100,
               backgroundColor: Colors.grey[300],
@@ -177,10 +186,10 @@ class _FrameworkResultTile extends ConsumerWidget {
         ),
         trailing: Text(
           '${completion.toStringAsFixed(1)}%',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: _getColorForCompletion(completion),
-                fontWeight: FontWeight.bold,
-              ),
+          style: textTheme.titleMedium?.copyWith(
+            color: _getColorForCompletion(completion),
+            fontWeight: FontWeight.bold,
+          ),
         ),
         onTap: framework != null && completion > 0
             ? () {
@@ -212,13 +221,19 @@ class _EmptyStateMessage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+    final baseSpacing = textTheme.bodyMedium!.fontSize!;
+
+    return Center(
       child: Padding(
-        padding: EdgeInsets.all(32),
+        padding: EdgeInsets.all(baseSpacing * 2),
         child: Text(
           'No assessments started yet.\nSelect an assessment to begin.',
           textAlign: TextAlign.center,
-          style: TextStyle(color: Colors.grey),
+          style: textTheme.bodyLarge?.copyWith(
+            color: Colors.grey,
+          ),
         ),
       ),
     );
@@ -261,19 +276,23 @@ class _FrameworkResultDetailBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+    final baseSpacing = textTheme.bodyMedium!.fontSize!;
+
     final scoringService = ScoringService();
     final spiderChartResults =
         scoringService.getSpiderChartData(frameworkType, framework);
 
-    // Responsive layout
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isWideScreen = constraints.maxWidth > 800;
+        final isWideScreen = constraints.maxWidth > baseSpacing * 50;
         final crossAxisCount = isWideScreen ? 2 : 1;
-        final chartSize = isWideScreen ? 350.0 : 300.0;
+        final chartSize =
+            isWideScreen ? baseSpacing * 21.875 : baseSpacing * 18.75;
 
         return SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.all(baseSpacing),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -284,23 +303,23 @@ class _FrameworkResultDetailBody extends StatelessWidget {
                 spiderChartResults: spiderChartResults,
               ),
 
-              const SizedBox(height: 24),
+              SizedBox(height: baseSpacing * 1.5),
 
               // Spider charts
               if (spiderChartResults.isNotEmpty) ...[
                 Text(
                   'Assessment Results',
-                  style: Theme.of(context).textTheme.titleLarge,
+                  style: textTheme.titleLarge,
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: baseSpacing),
                 GridView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: crossAxisCount,
                     childAspectRatio: 1.0,
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 16,
+                    crossAxisSpacing: baseSpacing,
+                    mainAxisSpacing: baseSpacing,
                   ),
                   itemCount: spiderChartResults.length,
                   itemBuilder: (context, index) {
@@ -334,6 +353,10 @@ class _ResultsSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+    final baseSpacing = textTheme.bodyMedium!.fontSize!;
+
     final completion = framework.completionPercentage;
     final overallScore = spiderChartResults.isNotEmpty
         ? spiderChartResults.last.overallScore
@@ -341,15 +364,15 @@ class _ResultsSummaryCard extends StatelessWidget {
 
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(baseSpacing),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               'Assessment Summary',
-              style: Theme.of(context).textTheme.titleMedium,
+              style: textTheme.titleMedium,
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: baseSpacing * 0.75),
             Row(
               children: [
                 Expanded(
@@ -368,7 +391,7 @@ class _ResultsSummaryCard extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: baseSpacing * 0.75),
             Row(
               children: [
                 Expanded(
@@ -448,21 +471,24 @@ class _SummaryMetric extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.grey[600],
-              ),
+          style: textTheme.bodySmall?.copyWith(
+            color: Colors.grey[600],
+          ),
         ),
         Text(
           value,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: color,
-                fontWeight: FontWeight.bold,
-              ),
+          style: textTheme.titleMedium?.copyWith(
+            color: color,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ],
     );
@@ -481,27 +507,31 @@ class _SpiderChartCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+    final baseSpacing = textTheme.bodyMedium!.fontSize!;
+
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(baseSpacing),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
               result.title,
-              style: Theme.of(context).textTheme.titleSmall,
+              style: textTheme.titleSmall,
               textAlign: TextAlign.center,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: baseSpacing * 0.5),
             Text(
               'Average: ${result.overallScore.toStringAsFixed(1)}/5.0',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.grey[600],
-                  ),
+              style: textTheme.bodySmall?.copyWith(
+                color: Colors.grey[600],
+              ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: baseSpacing),
             Expanded(
               child: Center(
                 child: SpiderChart(

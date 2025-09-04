@@ -21,7 +21,8 @@ import 'package:flutter/material.dart'
         Padding,
         Card,
         ConstrainedBox,
-        Center;
+        Center,
+        BorderRadius;
 
 class OrganizationInfoCard extends StatelessWidget {
   final bool isDesktop;
@@ -47,21 +48,25 @@ class OrganizationInfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+    final baseSpacing = textTheme.bodyMedium!.fontSize!;
+
     return Center(
       child: ConstrainedBox(
-        constraints:
-            BoxConstraints(maxWidth: isDesktop ? 800 : double.infinity),
+        constraints: BoxConstraints(
+            maxWidth: isDesktop ? baseSpacing * 50 : double.infinity),
         child: Card(
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(baseSpacing),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   'Organization Information',
-                  style: Theme.of(context).textTheme.titleLarge,
+                  style: textTheme.titleLarge,
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: baseSpacing),
 
                 // Use row layout for desktop, column for mobile
                 if (isDesktop || isTablet)
@@ -70,35 +75,59 @@ class OrganizationInfoCard extends StatelessWidget {
                       Expanded(
                         child: TextField(
                           controller: orgController,
-                          decoration: const InputDecoration(
+                          decoration: InputDecoration(
                             labelText: 'Organization',
-                            border: OutlineInputBorder(),
+                            border: OutlineInputBorder(
+                              borderRadius:
+                                  BorderRadius.circular(baseSpacing * 0.5),
+                            ),
                             isDense: true,
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: baseSpacing * 0.75,
+                              vertical: baseSpacing * 0.75,
+                            ),
                           ),
+                          style: textTheme.bodyLarge,
                           onChanged: onOrgChanged,
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      SizedBox(width: baseSpacing * 0.75),
                       Expanded(
                         child: TextField(
                           controller: nameController,
-                          decoration: const InputDecoration(
+                          decoration: InputDecoration(
                             labelText: 'Assessor',
-                            border: OutlineInputBorder(),
+                            border: OutlineInputBorder(
+                              borderRadius:
+                                  BorderRadius.circular(baseSpacing * 0.5),
+                            ),
                             isDense: true,
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: baseSpacing * 0.75,
+                              vertical: baseSpacing * 0.75,
+                            ),
                           ),
+                          style: textTheme.bodyLarge,
                           onChanged: onNameChanged,
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      SizedBox(width: baseSpacing * 0.75),
                       Expanded(
                         child: TextField(
                           controller: locationController,
-                          decoration: const InputDecoration(
+                          decoration: InputDecoration(
                             labelText: 'Location',
-                            border: OutlineInputBorder(),
+                            border: OutlineInputBorder(
+                              borderRadius:
+                                  BorderRadius.circular(baseSpacing * 0.5),
+                            ),
                             isDense: true,
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: baseSpacing * 0.75,
+                              vertical: baseSpacing * 0.75,
+                            ),
                           ),
+                          style: textTheme.bodyLarge,
                           onChanged: onLocationChanged,
                         ),
                       ),
@@ -109,28 +138,52 @@ class OrganizationInfoCard extends StatelessWidget {
                     children: [
                       TextField(
                         controller: orgController,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: 'Organization Name',
-                          border: OutlineInputBorder(),
+                          border: OutlineInputBorder(
+                            borderRadius:
+                                BorderRadius.circular(baseSpacing * 0.5),
+                          ),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: baseSpacing * 0.75,
+                            vertical: baseSpacing * 0.75,
+                          ),
                         ),
+                        style: textTheme.bodyLarge,
                         onChanged: onOrgChanged,
                       ),
-                      const SizedBox(height: 12),
+                      SizedBox(height: baseSpacing * 0.75),
                       TextField(
                         controller: nameController,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: 'Assessor Name',
-                          border: OutlineInputBorder(),
+                          border: OutlineInputBorder(
+                            borderRadius:
+                                BorderRadius.circular(baseSpacing * 0.5),
+                          ),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: baseSpacing * 0.75,
+                            vertical: baseSpacing * 0.75,
+                          ),
                         ),
+                        style: textTheme.bodyLarge,
                         onChanged: onNameChanged,
                       ),
-                      const SizedBox(height: 12),
+                      SizedBox(height: baseSpacing * 0.75),
                       TextField(
                         controller: locationController,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: 'Location',
-                          border: OutlineInputBorder(),
+                          border: OutlineInputBorder(
+                            borderRadius:
+                                BorderRadius.circular(baseSpacing * 0.5),
+                          ),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: baseSpacing * 0.75,
+                            vertical: baseSpacing * 0.75,
+                          ),
                         ),
+                        style: textTheme.bodyLarge,
                         onChanged: onLocationChanged,
                       ),
                     ],

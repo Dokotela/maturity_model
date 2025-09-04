@@ -1,23 +1,13 @@
+// lib/models/framework_type.dart
+
 /// Enum representing different framework types
+/// For workshop: Only IS4H frameworks are enabled
 enum FrameworkType {
-  bpmn,
-  adb,
-  eccmFacility,
-  eccmOrganization,
   is4hInstitutional,
-  is4hCountry,
-  ;
+  is4hCountry;
 
   String get displayName {
     switch (this) {
-      case FrameworkType.bpmn:
-        return 'BPM+ Clinical Practice';
-      case FrameworkType.adb:
-        return 'ADB Digital Health';
-      case FrameworkType.eccmFacility:
-        return 'ECCM Facility';
-      case FrameworkType.eccmOrganization:
-        return 'ECCM Organization';
       case FrameworkType.is4hInstitutional:
         return 'IS4H Institutional';
       case FrameworkType.is4hCountry:
@@ -27,18 +17,29 @@ enum FrameworkType {
 
   String get description {
     switch (this) {
-      case FrameworkType.bpmn:
-        return 'Business Process Model for Clinical Guidelines';
-      case FrameworkType.adb:
-        return 'Asian Development Bank Digital Health Readiness';
-      case FrameworkType.eccmFacility:
-        return 'Essential Care for Every Child - Facility Assessment';
-      case FrameworkType.eccmOrganization:
-        return 'Essential Care for Every Child - Organization Assessment';
       case FrameworkType.is4hInstitutional:
         return 'Information Systems for Health - Institutional Level Assessment';
       case FrameworkType.is4hCountry:
         return 'Information Systems for Health - Country Level Assessment';
+    }
+  }
+
+  String get shortName {
+    switch (this) {
+      case FrameworkType.is4hInstitutional:
+        return 'Institutional';
+      case FrameworkType.is4hCountry:
+        return 'Country';
+    }
+  }
+
+  /// Get the icon for this framework type
+  String get iconName {
+    switch (this) {
+      case FrameworkType.is4hInstitutional:
+        return 'local_hospital';
+      case FrameworkType.is4hCountry:
+        return 'flag';
     }
   }
 }

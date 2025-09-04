@@ -7,62 +7,20 @@ import 'package:maturity_model/maturity_model.dart'
 
 /// Helper function to get the scale label for a given level based on framework type
 String _getScaleLabel(FrameworkType frameworkType, int level) {
-  switch (frameworkType) {
-    case FrameworkType.bpmn:
-      switch (level) {
-        case 1:
-          return 'Initial/Inconsistent';
-        case 2:
-          return 'Repeatable/Stabilized';
-        case 3:
-          return 'Defined/Standardized';
-        case 4:
-          return 'Quantitatively Managed';
-        case 5:
-          return 'Learning Health System';
-        default:
-          return 'Level $level';
-      }
-
-    case FrameworkType.eccmFacility:
-    case FrameworkType.eccmOrganization:
-      // ECCM uses named levels
-      switch (level) {
-        case 1:
-          return 'Nascent';
-        case 2:
-          return 'Emerging';
-        case 3:
-          return 'Established';
-        case 4:
-          return 'Institutional';
-        case 5:
-          return 'Optimized';
-        default:
-          return 'Level $level';
-      }
-
-    case FrameworkType.is4hInstitutional:
-    case FrameworkType.is4hCountry:
-      // IS4H uses named levels
-      switch (level) {
-        case 1:
-          return 'Initiated';
-        case 2:
-          return 'Developing';
-        case 3:
-          return 'Defined';
-        case 4:
-          return 'Integrated';
-        case 5:
-          return 'Optimized';
-        default:
-          return 'Level $level';
-      }
-
-    case FrameworkType.adb:
-      // ADB and others just use numbers
-      return '$level';
+  // IS4H frameworks use these named levels
+  switch (level) {
+    case 1:
+      return 'Initiated';
+    case 2:
+      return 'Developing';
+    case 3:
+      return 'Defined';
+    case 4:
+      return 'Integrated';
+    case 5:
+      return 'Optimized';
+    default:
+      return 'Level $level';
   }
 }
 
@@ -79,17 +37,21 @@ class AssessmentItemWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+    final baseSpacing = textTheme.bodyMedium!.fontSize!;
+
     final isAnswered = item.response != null && item.response! > 0;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(baseSpacing),
       decoration: BoxDecoration(
         border: Border(
           left: BorderSide(
             color: isAnswered
                 ? Colors.green.withValues(alpha: 0.5)
                 : Colors.transparent,
-            width: 3,
+            width: baseSpacing * 0.1875,
           ),
         ),
       ),
@@ -99,12 +61,11 @@ class AssessmentItemWidget extends StatelessWidget {
           // Question text
           Text(
             item.questionText,
-            style: const TextStyle(
-              fontSize: 14,
+            style: textTheme.bodyMedium?.copyWith(
               fontWeight: FontWeight.w500,
             ),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: baseSpacing * 0.75),
 
           // Response widget based on type
           _ResponseWidget(
@@ -114,11 +75,10 @@ class AssessmentItemWidget extends StatelessWidget {
 
           // Scoring note if available
           if (item.scoringNote != null && item.scoringNote!.isNotEmpty) ...[
-            const SizedBox(height: 8),
+            SizedBox(height: baseSpacing * 0.5),
             Text(
               item.scoringNote!,
-              style: TextStyle(
-                fontSize: 12,
+              style: textTheme.bodySmall?.copyWith(
                 fontStyle: FontStyle.italic,
                 color: Colors.grey[600],
               ),
@@ -190,6 +150,10 @@ class _MaturityDescriptionScale extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+    final baseSpacing = textTheme.bodyMedium!.fontSize!;
+
     return Column(
       children: List.generate(5, (index) {
         final level = index + 1;
@@ -200,7 +164,7 @@ class _MaturityDescriptionScale extends ConsumerWidget {
         final description = item.getMaturityDescription(level) ?? '';
 
         return Padding(
-          padding: const EdgeInsets.only(bottom: 8),
+          padding: EdgeInsets.only(bottom: baseSpacing * 0.5),
           child: InkWell(
             onTap: () {
               ref.read(sessionProvider.notifier).updateResponse(
@@ -209,46 +173,46 @@ class _MaturityDescriptionScale extends ConsumerWidget {
                     level,
                   );
             },
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(baseSpacing * 0.5),
             child: Container(
               decoration: BoxDecoration(
                 color: isSelected
-                    ? Theme.of(context).primaryColor.withValues(alpha: 0.1)
+                    ? theme.primaryColor.withValues(alpha: 0.1)
                     : null,
                 border: Border.all(
-                  color: isSelected
-                      ? Theme.of(context).primaryColor
-                      : Colors.grey[300]!,
+                  color: isSelected ? theme.primaryColor : Colors.grey[300]!,
                   width: isSelected ? 2 : 1,
                 ),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(baseSpacing * 0.5),
               ),
-              padding: const EdgeInsets.all(12),
+              padding: EdgeInsets.all(baseSpacing * 0.75),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Radio button style indicator
                   Container(
-                    width: 24,
-                    height: 24,
-                    margin: const EdgeInsets.only(right: 12, top: 2),
+                    width: baseSpacing * 1.5,
+                    height: baseSpacing * 1.5,
+                    margin: EdgeInsets.only(
+                      right: baseSpacing * 0.75,
+                      top: baseSpacing * 0.125,
+                    ),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: isSelected
-                            ? Theme.of(context).primaryColor
-                            : Colors.grey[400]!,
+                        color:
+                            isSelected ? theme.primaryColor : Colors.grey[400]!,
                         width: 2,
                       ),
                     ),
                     child: isSelected
                         ? Center(
                             child: Container(
-                              width: 12,
-                              height: 12,
+                              width: baseSpacing * 0.75,
+                              height: baseSpacing * 0.75,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: Theme.of(context).primaryColor,
+                                color: theme.primaryColor,
                               ),
                             ),
                           )
@@ -261,19 +225,16 @@ class _MaturityDescriptionScale extends ConsumerWidget {
                       children: [
                         Text(
                           'Level $level: $levelLabel',
-                          style: TextStyle(
+                          style: textTheme.titleSmall?.copyWith(
                             fontWeight: FontWeight.bold,
-                            color: isSelected
-                                ? Theme.of(context).primaryColor
-                                : null,
+                            color: isSelected ? theme.primaryColor : null,
                           ),
                         ),
                         if (description.isNotEmpty) ...[
-                          const SizedBox(height: 4),
+                          SizedBox(height: baseSpacing * 0.25),
                           Text(
                             description,
-                            style: TextStyle(
-                              fontSize: 13,
+                            style: textTheme.bodySmall?.copyWith(
                               color: isSelected ? null : Colors.grey[600],
                             ),
                           ),
@@ -291,7 +252,7 @@ class _MaturityDescriptionScale extends ConsumerWidget {
   }
 }
 
-/// Likert scale (1-5) response buttons
+/// Likert scale (1-5) response buttons for IS4H
 class _LikertScale extends ConsumerWidget {
   final AssessmentItem item;
   final FrameworkType frameworkType;
@@ -303,112 +264,82 @@ class _LikertScale extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // For ECCM and IS4H (without maturity descriptions), show vertical layout with names
-    if (frameworkType == FrameworkType.is4hInstitutional ||
-        frameworkType == FrameworkType.is4hCountry) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: List.generate(5, (index) {
-          final value = index + 1;
-          final isSelected = item.response == value;
-          final label = _getScaleLabel(frameworkType, value);
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+    final baseSpacing = textTheme.bodyMedium!.fontSize!;
 
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 4),
-            child: InkWell(
-              onTap: () {
-                ref.read(sessionProvider.notifier).updateResponse(
-                      frameworkType,
-                      item.id,
-                      value,
-                    );
-              },
-              borderRadius: BorderRadius.circular(8),
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? Theme.of(context).primaryColor.withValues(alpha: 0.1)
-                      : null,
-                  border: Border.all(
-                    color: isSelected
-                        ? Theme.of(context).primaryColor
-                        : Colors.grey[300]!,
-                    width: isSelected ? 2 : 1,
-                  ),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 24,
-                      height: 24,
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? Theme.of(context).primaryColor
-                            : Colors.grey[400],
-                        shape: BoxShape.circle,
-                      ),
-                      child: Center(
-                        child: Text(
-                          '$value',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      label,
-                      style: TextStyle(
-                        fontWeight:
-                            isSelected ? FontWeight.bold : FontWeight.normal,
-                        color:
-                            isSelected ? Theme.of(context).primaryColor : null,
-                      ),
-                    ),
-                    if (isSelected) ...[
-                      const Spacer(),
-                      Icon(
-                        Icons.check_circle,
-                        color: Theme.of(context).primaryColor,
-                        size: 20,
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
-          );
-        }),
-      );
-    }
-
-    // For ADB and BPMN, use horizontal buttons
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+    // For IS4H (without maturity descriptions), show vertical layout with names
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: List.generate(5, (index) {
         final value = index + 1;
         final isSelected = item.response == value;
         final label = _getScaleLabel(frameworkType, value);
 
-        return Expanded(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 2),
-            child: _ResponseButton(
-              label: label,
-              isSelected: isSelected,
-              onPressed: () {
-                ref.read(sessionProvider.notifier).updateResponse(
-                      frameworkType,
-                      item.id,
-                      value,
-                    );
-              },
+        return Padding(
+          padding: EdgeInsets.only(bottom: baseSpacing * 0.25),
+          child: InkWell(
+            onTap: () {
+              ref.read(sessionProvider.notifier).updateResponse(
+                    frameworkType,
+                    item.id,
+                    value,
+                  );
+            },
+            borderRadius: BorderRadius.circular(baseSpacing * 0.5),
+            child: Container(
+              padding: EdgeInsets.symmetric(
+                horizontal: baseSpacing * 0.75,
+                vertical: baseSpacing * 0.5,
+              ),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? theme.primaryColor.withValues(alpha: 0.1)
+                    : null,
+                border: Border.all(
+                  color: isSelected ? theme.primaryColor : Colors.grey[300]!,
+                  width: isSelected ? 2 : 1,
+                ),
+                borderRadius: BorderRadius.circular(baseSpacing * 0.5),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: baseSpacing * 1.5,
+                    height: baseSpacing * 1.5,
+                    decoration: BoxDecoration(
+                      color: isSelected ? theme.primaryColor : Colors.grey[400],
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: Text(
+                        '$value',
+                        style: textTheme.labelSmall?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: baseSpacing * 0.75),
+                  Text(
+                    label,
+                    style: textTheme.bodyMedium?.copyWith(
+                      fontWeight:
+                          isSelected ? FontWeight.bold : FontWeight.normal,
+                      color: isSelected ? theme.primaryColor : null,
+                    ),
+                  ),
+                  if (isSelected) ...[
+                    const Spacer(),
+                    Icon(
+                      Icons.check_circle,
+                      color: theme.primaryColor,
+                      size: baseSpacing * 1.25,
+                    ),
+                  ],
+                ],
+              ),
             ),
           ),
         );
@@ -429,11 +360,15 @@ class _YesNoButtons extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+    final baseSpacing = textTheme.bodyMedium!.fontSize!;
+
     return Row(
       children: [
         Expanded(
           child: Padding(
-            padding: const EdgeInsets.only(right: 4),
+            padding: EdgeInsets.only(right: baseSpacing * 0.25),
             child: _ResponseButton(
               label: 'Yes',
               isSelected: item.response == 5,
@@ -449,7 +384,7 @@ class _YesNoButtons extends ConsumerWidget {
         ),
         Expanded(
           child: Padding(
-            padding: const EdgeInsets.only(left: 4),
+            padding: EdgeInsets.only(left: baseSpacing * 0.25),
             child: _ResponseButton(
               label: 'No',
               isSelected: item.response == 1,
@@ -480,11 +415,15 @@ class _YesNoPlanningButtons extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+    final baseSpacing = textTheme.bodyMedium!.fontSize!;
+
     return Row(
       children: [
         Expanded(
           child: Padding(
-            padding: const EdgeInsets.only(right: 2),
+            padding: EdgeInsets.only(right: baseSpacing * 0.125),
             child: _ResponseButton(
               label: 'Yes',
               isSelected: item.response == 5,
@@ -501,7 +440,7 @@ class _YesNoPlanningButtons extends ConsumerWidget {
         ),
         Expanded(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 2),
+            padding: EdgeInsets.symmetric(horizontal: baseSpacing * 0.125),
             child: _ResponseButton(
               label: 'Planning',
               isSelected: item.response == 3,
@@ -518,7 +457,7 @@ class _YesNoPlanningButtons extends ConsumerWidget {
         ),
         Expanded(
           child: Padding(
-            padding: const EdgeInsets.only(left: 2),
+            padding: EdgeInsets.only(left: baseSpacing * 0.125),
             child: _ResponseButton(
               label: 'No',
               isSelected: item.response == 1,
@@ -554,27 +493,28 @@ class _ResponseButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+    final baseSpacing = textTheme.bodyMedium!.fontSize!;
+
     return ElevatedButton(
       onPressed: onPressed,
       style: ElevatedButton.styleFrom(
-        backgroundColor:
-            isSelected ? Theme.of(context).primaryColor : Colors.grey[200],
+        backgroundColor: isSelected ? theme.primaryColor : Colors.grey[200],
         foregroundColor: isSelected ? Colors.white : Colors.black87,
         padding: EdgeInsets.symmetric(
-          vertical: isCompact ? 8 : 12,
-          horizontal: isCompact ? 4 : 8,
+          vertical: isCompact ? baseSpacing * 0.5 : baseSpacing * 0.75,
+          horizontal: isCompact ? baseSpacing * 0.25 : baseSpacing * 0.5,
         ),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(baseSpacing * 0.5),
         ),
       ),
       child: FittedBox(
         fit: BoxFit.scaleDown,
         child: Text(
           label,
-          style: TextStyle(
-            fontSize: isCompact ? 13 : 14,
-          ),
+          style: isCompact ? textTheme.bodySmall : textTheme.bodyMedium,
         ),
       ),
     );
