@@ -60,7 +60,7 @@ class SpiderChart extends StatelessWidget {
               fontWeight: FontWeight.bold,
             ),
           ),
-          SizedBox(height: baseSpacing),
+          SizedBox(height: baseSpacing), // RESPONSIVE: was 16
         ],
         SizedBox(
           width: size,
@@ -106,7 +106,7 @@ class _SpiderChartPainter extends CustomPainter {
     if (dataPoints.isEmpty) return;
 
     final center = Offset(size.width / 2, size.height / 2);
-    final labelPadding = baseSpacing * 3.75;
+    final labelPadding = baseSpacing * 3.75; // RESPONSIVE: was 60
     final radius = math.min(size.width, size.height) / 2 - labelPadding;
     final numberOfPoints = dataPoints.length;
     final angleStep = 2 * math.pi / numberOfPoints;
@@ -118,14 +118,15 @@ class _SpiderChartPainter extends CustomPainter {
     _drawDataShape(canvas, center, radius, angleStep);
 
     // Draw labels
-    _drawLabels(canvas, center, radius + baseSpacing * 1.875, angleStep);
+    _drawLabels(canvas, center, radius + baseSpacing * 1.875,
+        angleStep); // RESPONSIVE: was radius + 30
   }
 
   void _drawGrid(Canvas canvas, Offset center, double radius,
       int numberOfPoints, double angleStep) {
     final gridPaint = Paint()
       ..color = gridColor
-      ..strokeWidth = baseSpacing * 0.0625
+      ..strokeWidth = baseSpacing * 0.0625 // RESPONSIVE: was 1
       ..style = PaintingStyle.stroke;
 
     // Draw concentric circles (grid levels)
@@ -155,7 +156,7 @@ class _SpiderChartPainter extends CustomPainter {
 
     final strokePaint = Paint()
       ..color = strokeColor
-      ..strokeWidth = baseSpacing * 0.125
+      ..strokeWidth = baseSpacing * 0.125 // RESPONSIVE: was 2
       ..style = PaintingStyle.stroke;
 
     final path = Path();
@@ -192,7 +193,7 @@ class _SpiderChartPainter extends CustomPainter {
       ..color = strokeColor
       ..style = PaintingStyle.fill;
 
-    final pointRadius = baseSpacing * 0.25;
+    final pointRadius = baseSpacing * 0.25; // RESPONSIVE: was 4
     for (final point in points) {
       canvas.drawCircle(point, pointRadius, pointPaint);
     }
@@ -212,7 +213,7 @@ class _SpiderChartPainter extends CustomPainter {
           text: dataPoints[i].label,
           style: TextStyle(
             color: labelColor,
-            fontSize: baseSpacing * 0.75,
+            fontSize: baseSpacing * 0.75, // RESPONSIVE: was 12
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -236,7 +237,7 @@ class _SpiderChartPainter extends CustomPainter {
             text: valueText,
             style: TextStyle(
               color: labelColor.withValues(alpha: 0.7),
-              fontSize: baseSpacing * 0.625,
+              fontSize: baseSpacing * 0.625, // RESPONSIVE: was 10
             ),
           ),
           textDirection: TextDirection.ltr,
@@ -245,7 +246,9 @@ class _SpiderChartPainter extends CustomPainter {
 
         final valueOffset = Offset(
           labelPoint.dx - valuePainter.width / 2,
-          labelPoint.dy + textPainter.height / 2 + baseSpacing * 0.125,
+          labelPoint.dy +
+              textPainter.height / 2 +
+              baseSpacing * 0.125, // RESPONSIVE: was 2
         );
 
         valuePainter.paint(canvas, valueOffset);

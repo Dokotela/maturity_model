@@ -1,5 +1,7 @@
 // lib/screens/results_screen.dart
 
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:maturity_model/maturity_model.dart'
@@ -288,8 +290,6 @@ class _FrameworkResultDetailBody extends StatelessWidget {
       builder: (context, constraints) {
         final isWideScreen = constraints.maxWidth > baseSpacing * 50;
         final crossAxisCount = isWideScreen ? 2 : 1;
-        final chartSize =
-            isWideScreen ? baseSpacing * 21.875 : baseSpacing * 18.75;
 
         return SingleChildScrollView(
           padding: EdgeInsets.all(baseSpacing),
@@ -326,7 +326,6 @@ class _FrameworkResultDetailBody extends StatelessWidget {
                     final result = spiderChartResults[index];
                     return _SpiderChartCard(
                       result: result,
-                      chartSize: chartSize,
                     );
                   },
                 ),
@@ -495,14 +494,12 @@ class _SummaryMetric extends StatelessWidget {
   }
 }
 
-/// Individual spider chart card
 class _SpiderChartCard extends StatelessWidget {
   final SpiderChartResult result;
-  final double chartSize;
+  // Remove chartSize parameter
 
   const _SpiderChartCard({
     required this.result,
-    required this.chartSize,
   });
 
   @override
@@ -514,34 +511,50 @@ class _SpiderChartCard extends StatelessWidget {
     return Card(
       child: Padding(
         padding: EdgeInsets.all(baseSpacing),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              result.title,
-              style: textTheme.titleSmall,
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-            SizedBox(height: baseSpacing * 0.5),
-            Text(
-              'Average: ${result.overallScore.toStringAsFixed(1)}/5.0',
-              style: textTheme.bodySmall?.copyWith(
-                color: Colors.grey[600],
-              ),
-            ),
-            SizedBox(height: baseSpacing),
-            Expanded(
-              child: Center(
-                child: SpiderChart(
-                  dataPoints: result.dataPoints,
-                  size: chartSize * 0.8,
-                  showValues: true,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            // Calculate available space for chart
+            final textSpace =
+                baseSpacing * 5; // Space for title, average, and padding
+            final availableSize = math.min(
+              constraints.maxWidth -
+                  (baseSpacing * 2), // Account for internal padding
+              constraints.maxHeight - textSpace,
+            );
+            final chartSize = availableSize > 0
+                ? availableSize * 0.85
+                : 200.0; // Use 85% of available space
+
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  result.title,
+                  style: textTheme.titleSmall,
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
-            ),
-          ],
+                SizedBox(height: baseSpacing * 0.5),
+                Text(
+                  'Average: ${result.overallScore.toStringAsFixed(1)}/5.0',
+                  style: textTheme.bodySmall?.copyWith(
+                    color: Colors.grey[600],
+                  ),
+                ),
+                SizedBox(height: baseSpacing),
+                Expanded(
+                  child: Center(
+                    child: SpiderChart(
+                      dataPoints: result.dataPoints,
+                      size: chartSize,
+                      showValues: true,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
         ),
       ),
     );

@@ -28,12 +28,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         index: _selectedIndex,
         children: [
           const HomeScreen(),
-          Center(
-            child: Text(
-              'Assessments List',
-              style: textTheme.headlineSmall,
-            ),
-          ),
           const ResultsScreen(),
           const SettingsScreen(),
         ],

@@ -66,35 +66,34 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ),
         centerTitle: true,
       ),
-      body: Center(
-        child: Container(
-          constraints: BoxConstraints(
-            maxWidth: baseSpacing * 87.5, // Relative to text size
-          ),
-          padding: EdgeInsets.all(baseSpacing * 0.75),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Organization Info Section
-              _buildOrganizationSection(context),
+      body: SingleChildScrollView(
+        child: Center(
+          child: Container(
+            constraints: BoxConstraints(
+              maxWidth: baseSpacing * 87.5, // Relative to text size
+            ),
+            padding: EdgeInsets.all(baseSpacing * 0.75),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Organization Info Section
+                _buildOrganizationSection(context),
 
-              SizedBox(height: baseSpacing * 1.25),
+                SizedBox(height: baseSpacing * 1.25),
 
-              // Framework Selection Title
-              Text(
-                'Select IS4H Assessment Framework',
-                style: textTheme.headlineLarge,
-                textAlign: TextAlign.center,
-              ),
+                // Framework Selection Title
+                Text(
+                  'Select IS4H Assessment Framework',
+                  style: textTheme.headlineLarge,
+                  textAlign: TextAlign.center,
+                ),
 
-              SizedBox(height: baseSpacing * 1),
+                SizedBox(height: baseSpacing * 1),
 
-              // Framework Cards
-              Expanded(
-                // ADDED Expanded to take remaining space
-                child: _buildFrameworkCards(context, screenWidth),
-              ),
-            ],
+                // Framework Cards - no Expanded needed in ScrollView
+                _buildFrameworkCards(context, screenWidth),
+              ],
+            ),
           ),
         ),
       ),
@@ -120,6 +119,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               style: textTheme.titleLarge,
             ),
             SizedBox(height: baseSpacing * 0.75),
+
+            // Responsive layout for text fields
             useRowLayout
                 ? Row(
                     children: [
@@ -239,7 +240,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     if (useVerticalLayout) {
       // Stack cards vertically on smaller screens
       return Column(
-        mainAxisAlignment: MainAxisAlignment.center, // CENTER vertically
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
             constraints: BoxConstraints(maxWidth: cardMaxWidth),
@@ -261,7 +262,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     } else {
       // Side by side on larger screens
       return Center(
-        // CENTER the row
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -382,7 +382,7 @@ class _FrameworkCard extends ConsumerWidget {
 
               SizedBox(height: baseSpacing * 0.75),
 
-              // Description
+              // Description - no Flexible wrapper
               Text(
                 type == FrameworkType.is4hInstitutional
                     ? 'Comprehensive assessment for healthcare facilities, hospitals, and institutions to evaluate information systems maturity.'
@@ -390,6 +390,8 @@ class _FrameworkCard extends ConsumerWidget {
                 style: textTheme.bodyLarge?.copyWith(
                   color: Colors.grey[800],
                 ),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 3,
               ),
 
               SizedBox(height: baseSpacing * 0.75),
