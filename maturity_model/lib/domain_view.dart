@@ -1,15 +1,55 @@
-import 'package:creator/creator.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
-import 'package:maturity_model/creators.dart';
-
+import 'package:maturity_model/providers.dart';
 import 'content/content.dart';
 
-class DomainView extends StatelessWidget {
-  const DomainView(this.domain, this.primary, {Key? key}) : super(key: key);
+class DomainView extends ConsumerStatefulWidget {
+  const DomainView(this.domain, this.primary, {super.key});
 
   final Domain domain;
   final bool primary;
+
+  @override
+  ConsumerState<DomainView> createState() => _DomainViewState();
+}
+
+class _DomainViewState extends ConsumerState<DomainView> {
+  late final ScrollController _scrollController;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+
+    // Initialize the number of items after the first frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initializeItemCounts();
+    });
+  }
+
+  void _initializeItemCounts() {
+    final level = ref.read(mmLevelProvider);
+
+    for (var group in widget.domain.groups) {
+      int itemCount = 0;
+      for (var item in group.items) {
+        if (item is Question) {
+          itemCount++;
+        } else if (item is Subgroup) {
+          itemCount += item.questions.length;
+        }
+      }
+      ref.read(numberItemsProvider((level, group.title)).notifier).state =
+          itemCount;
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +58,6 @@ class DomainView extends StatelessWidget {
     double columnFirst = 0.18;
     double columns = 0.12;
     double columnComments = 0.17;
-    final scrollController = ScrollController();
 
     Widget header(Color color, double width, String text) => Container(
         height: 50,
@@ -86,133 +125,117 @@ class DomainView extends StatelessWidget {
       String text, [
       String? name,
       int? value,
-    ]) =>
-        Container(
-            decoration: BoxDecoration(border: Border.all()),
-            width: getWidth(MediaQuery.of(context).size.width, width),
-            child: Padding(
-                padding: const EdgeInsets.all(4.0),
-                child: name == null
-                    ? Text(text)
-                    : Watcher(
-                        (context, ref, child) {
-                          final level = ref.read(mmLevelCreator);
-                          return TextButton(
-                              onPressed: () {
-                                if (ref.read(itemCreator(level, name)) ==
-                                    value) {
-                                  ref.set(itemCreator(level, name), 0);
-                                } else {
-                                  ref.set(itemCreator(level, name), value);
-                                }
-                              },
-                              child: Text(text,
-                                  style: TextStyle(
-                                    fontWeight:
-                                        ref.watch(itemCreator(level, name)) ==
-                                                value
-                                            ? FontWeight.bold
-                                            : FontWeight.normal,
-                                    color:
-                                        ref.watch(itemCreator(level, name)) ==
-                                                value
-                                            ? Colors.blue
-                                            : Colors.black,
-                                  )));
-                        },
-                      )));
+    ]) {
+      return Container(
+        decoration: BoxDecoration(border: Border.all()),
+        width: getWidth(MediaQuery.of(context).size.width, width),
+        child: Padding(
+          padding: const EdgeInsets.all(4.0),
+          child: name == null
+              ? Text(text)
+              : Builder(
+                  builder: (context) {
+                    final level = ref.read(mmLevelProvider);
+                    final currentValue = ref.watch(itemProvider((level, name)));
 
-    Widget itemRow(Item item, String name) => IntrinsicHeight(
+                    return TextButton(
+                      onPressed: () {
+                        if (currentValue == value) {
+                          ref.read(itemProvider((level, name)).notifier).state =
+                              0;
+                        } else {
+                          ref.read(itemProvider((level, name)).notifier).state =
+                              value!;
+                        }
+                      },
+                      child: Text(
+                        text,
+                        style: TextStyle(
+                          fontWeight: currentValue == value
+                              ? FontWeight.bold
+                              : FontWeight.normal,
+                          color: currentValue == value
+                              ? Colors.blue
+                              : Colors.black,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+        ),
+      );
+    }
+
+    Widget itemRow(Question question, String name) => IntrinsicHeight(
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              itemRowBox(columnFirst, item.text),
-              itemRowBox(
-                  columns,
-                  item.map(subGroup: (_) => '', question: (_) => _.level1),
-                  name,
-                  1),
-              itemRowBox(
-                  columns,
-                  item.map(subGroup: (_) => '', question: (_) => _.level2),
-                  name,
-                  2),
-              itemRowBox(
-                  columns,
-                  item.map(subGroup: (_) => '', question: (_) => _.level3),
-                  name,
-                  3),
-              itemRowBox(
-                  columns,
-                  item.map(subGroup: (_) => '', question: (_) => _.level4),
-                  name,
-                  4),
-              itemRowBox(
-                  columns,
-                  item.map(subGroup: (_) => '', question: (_) => _.level5),
-                  name,
-                  5),
+              itemRowBox(columnFirst, question.text),
+              itemRowBox(columns, question.level1, name, 1),
+              itemRowBox(columns, question.level2, name, 2),
+              itemRowBox(columns, question.level3, name, 3),
+              itemRowBox(columns, question.level4, name, 4),
+              itemRowBox(columns, question.level5, name, 5),
               itemRowBox(columnComments, ''),
             ],
           ),
         );
 
-    return Watcher((context, ref, child) {
-      return Scaffold(
-        body: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
+    // Build the widgets
+    final widgets = <Widget>[];
+    final level = ref.read(mmLevelProvider);
+
+    for (var group in widget.domain.groups) {
+      widgets.add(const Gap(24));
+      widgets.add(groupRow(group));
+
+      // Just read the group value, don't modify anything
+      ref.watch(groupProvider((level, group.title)));
+
+      int i = 0;
+      for (var item in group.items) {
+        widgets.add(const Gap(4));
+
+        if (item is Subgroup) {
+          widgets.add(const Gap(8));
+          widgets.add(Row(
+            mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              dataTable,
-              Expanded(
-                child: Scrollbar(
-                  controller: scrollController,
-                  thumbVisibility: true,
-                  child: SingleChildScrollView(
-                    controller: scrollController,
-                    child: Watcher(
-                      (context, ref, child) {
-                        var i = 0;
-                        final widgets = <Widget>[];
-                        for (var group in domain.groups) {
-                          widgets.add(const Gap(24));
-                          widgets.add(groupRow(group));
-                          ref.read(groupCreator(
-                              ref.read(mmLevelCreator), group.title));
-                          i = 0;
-                          for (var item in group.items) {
-                            widgets.add(const Gap(4));
-                            item.map(
-                              subGroup: (_) {
-                                widgets.add(const Gap(8));
-                                widgets.add(Row(
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  children: [
-                                    itemRowBox(0.3, _.text),
-                                  ],
-                                ));
-                              },
-                              question: (_) {
-                                widgets.add(itemRow(_, '${group.title}/$i'));
-                                i++;
-                              },
-                            );
-                          }
-                          ref.set<int>(
-                              numberItemsCreator(
-                                  ref.read(mmLevelCreator), group.title),
-                              i);
-                        }
-                        return Column(children: widgets);
-                      },
-                    ),
-                  ),
+              itemRowBox(0.3, item.text),
+            ],
+          ));
+          // Add the subgroup's questions
+          for (var question in item.questions) {
+            widgets.add(const Gap(4));
+            widgets.add(itemRow(question, '${group.title}/$i'));
+            i++;
+          }
+        } else if (item is Question) {
+          widgets.add(itemRow(item, '${group.title}/$i'));
+          i++;
+        }
+      }
+    }
+
+    return Scaffold(
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            dataTable,
+            Expanded(
+              child: Scrollbar(
+                controller: _scrollController,
+                thumbVisibility: true,
+                child: SingleChildScrollView(
+                  controller: _scrollController,
+                  child: Column(children: widgets),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
-      );
-    });
+      ),
+    );
   }
 }

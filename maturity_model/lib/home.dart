@@ -1,17 +1,17 @@
-import 'package:creator/creator.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:maturity_model/content/content.dart';
-import 'package:maturity_model/creators.dart';
+import 'package:maturity_model/providers.dart';
 import 'package:maturity_model/doubles_for_screen_size.dart';
 
-class HomeView extends StatelessWidget {
-  const HomeView(this._tabController, {Key? key}) : super(key: key);
+class HomeView extends ConsumerWidget {
+  const HomeView(this._tabController, {super.key});
 
   final TabController _tabController;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     TextButton linkButton(String text, int value) => TextButton(
           onPressed: () {
             _tabController.index = value;
@@ -87,59 +87,61 @@ class HomeView extends StatelessWidget {
           ],
         );
 
-    Widget editInfo(Creator creator, String hintText) => Watcher(
-          ((context, ref, child) => SizedBox(
-                height: 30,
-                width: 700,
-                child: TextFormField(
-                  initialValue: ref.read(creator) as String,
-                  decoration: InputDecoration(hintText: hintText),
-                  onChanged: ((value) => ref.update(creator, (p0) => value)),
-                ),
-              )),
+    Widget editInfo(StateProvider<String> provider, String hintText) =>
+        SizedBox(
+          height: 30,
+          width: 700,
+          child: TextFormField(
+            initialValue: ref.read(provider),
+            decoration: InputDecoration(hintText: hintText),
+            onChanged: (value) => ref.read(provider.notifier).state = value,
+          ),
         );
 
     Widget infoEntry() => Row(
           children: [
             const Gap(16),
-            Watcher(
-              ((context, ref, child) => Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      editInfo(nameCreator, 'Name(s)'),
-                      const Gap(12),
-                      SizedBox(
-                        height: 30,
-                        width: 700,
-                        child: TextFormField(
-                            controller: TextEditingController(
-                                text: ref
-                                    .watch(dateCreator)
-                                    .toIso8601String()
-                                    .substring(0, 10)),
-                            decoration: const InputDecoration(hintText: 'Date'),
-                            onTap: () async {
-                              final picked = await showDatePicker(
-                                context: context,
-                                initialDate: DateTime.now(),
-                                firstDate: DateTime(2000),
-                                lastDate: DateTime(2025),
-                              );
-                              ref.update(dateCreator, (p0) => picked);
-                            }),
-                      ),
-                      const Gap(12),
-                      editInfo(locationCreator, 'Location'),
-                      const Gap(12),
-                      editInfo(organizationCreator, 'Organization'),
-                      const Gap(12),
-                      editInfo(additionalInformationCreator,
-                          'Additional Information'),
-                    ],
-                  )),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                editInfo(nameProvider, 'Name(s)'),
+                const Gap(12),
+                SizedBox(
+                  height: 30,
+                  width: 700,
+                  child: TextFormField(
+                    controller: TextEditingController(
+                        text: ref
+                            .watch(dateProvider)
+                            .toIso8601String()
+                            .substring(0, 10)),
+                    decoration: const InputDecoration(hintText: 'Date'),
+                    onTap: () async {
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: DateTime.now(),
+                        firstDate: DateTime(2000),
+                        lastDate: DateTime(2025),
+                      );
+                      if (picked != null) {
+                        ref.read(dateProvider.notifier).state = picked;
+                      }
+                    },
+                  ),
+                ),
+                const Gap(12),
+                editInfo(locationProvider, 'Location'),
+                const Gap(12),
+                editInfo(organizationProvider, 'Organization'),
+                const Gap(12),
+                editInfo(
+                    additionalInformationProvider, 'Additional Information'),
+              ],
             ),
           ],
         );
+
+    final level = ref.watch(mmLevelProvider);
 
     return Scaffold(
       body: Row(
@@ -157,38 +159,33 @@ class HomeView extends StatelessWidget {
                   style: TextStyle(fontSize: 24),
                 ),
                 const Gap(32),
-                Watcher(
-                  ((context, ref, child) {
-                    final level = ref.watch(mmLevelCreator);
-                    return Column(
-                      children: [
-                        ListTile(
-                          title: const Text('Institutional'),
-                          leading: Radio<MmLevel>(
-                            value: MmLevel.institutional,
-                            groupValue: level,
-                            onChanged: (MmLevel? value) {
-                              if (value != null) {
-                                ref.update(mmLevelCreator, (p0) => value);
-                              }
-                            },
-                          ),
-                        ),
-                        ListTile(
-                          title: const Text('Country'),
-                          leading: Radio<MmLevel>(
-                            value: MmLevel.country,
-                            groupValue: level,
-                            onChanged: (MmLevel? value) {
-                              if (value != null) {
-                                ref.update(mmLevelCreator, (p0) => value);
-                              }
-                            },
-                          ),
-                        ),
-                      ],
-                    );
-                  }),
+                Column(
+                  children: [
+                    ListTile(
+                      title: const Text('Institutional'),
+                      leading: Radio<MmLevel>(
+                        value: MmLevel.institutional,
+                        groupValue: level,
+                        onChanged: (MmLevel? value) {
+                          if (value != null) {
+                            ref.read(mmLevelProvider.notifier).state = value;
+                          }
+                        },
+                      ),
+                    ),
+                    ListTile(
+                      title: const Text('Country'),
+                      leading: Radio<MmLevel>(
+                        value: MmLevel.country,
+                        groupValue: level,
+                        onChanged: (MmLevel? value) {
+                          if (value != null) {
+                            ref.read(mmLevelProvider.notifier).state = value;
+                          }
+                        },
+                      ),
+                    ),
+                  ],
                 ),
                 const Gap(32),
                 instructions(),

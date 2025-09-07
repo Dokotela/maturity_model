@@ -1,31 +1,35 @@
-import 'package:creator/creator.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:maturity_model/content/content.dart';
-import 'package:maturity_model/content/countryContent.dart';
-import 'package:maturity_model/content/institutionalContent.dart';
-import 'package:maturity_model/creators.dart';
+import 'package:maturity_model/content/country_content.dart';
+import 'package:maturity_model/content/institutional_content.dart';
+import 'package:maturity_model/providers.dart';
 import 'package:maturity_model/domain_view.dart';
 import 'package:maturity_model/home.dart';
 import 'package:maturity_model/organizational_view.dart';
 
-void main() => runApp(CreatorGraph(child: const MyApp()));
+void main() => runApp(
+      ProviderScope(
+        child: const MyApp(),
+      ),
+    );
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) => const MaterialApp(
       home: DefaultTabController(length: 7, child: TabScaffold()));
 }
 
-class TabScaffold extends StatefulWidget {
-  const TabScaffold({Key? key}) : super(key: key);
+class TabScaffold extends ConsumerStatefulWidget {
+  const TabScaffold({super.key});
 
   @override
-  State<StatefulWidget> createState() => _TabScaffoldState();
+  ConsumerState<TabScaffold> createState() => _TabScaffoldState();
 }
 
-class _TabScaffoldState extends State<TabScaffold>
+class _TabScaffoldState extends ConsumerState<TabScaffold>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController =
       TabController(length: 7, vsync: this);
@@ -41,6 +45,12 @@ class _TabScaffoldState extends State<TabScaffold>
             Expanded(child: Text(text, textAlign: TextAlign.center)),
           ],
         ));
+
+    // Watch the mmLevel provider
+    final mmLevel = ref.watch(mmLevelProvider);
+    final content =
+        mmLevel == MmLevel.country ? countryContent : institutionalContent;
+
     return Scaffold(
       appBar: AppBar(
         bottom: TabBar(
@@ -58,24 +68,17 @@ class _TabScaffoldState extends State<TabScaffold>
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Watcher(
-          (context, ref, child) {
-            final content = ref.watch(mmLevelCreator) == MmLevel.country
-                ? countryContent
-                : institutionalContent;
-            return TabBarView(
-              controller: _tabController,
-              children: [
-                HomeView(_tabController),
-                OrganizationalView(content),
-                DomainView(content.domains[0], true),
-                DomainView(content.domains[1], false),
-                DomainView(content.domains[2], false),
-                DomainView(content.domains[3], false),
-                const Icon(Icons.directions_bike),
-              ],
-            );
-          },
+        child: TabBarView(
+          controller: _tabController,
+          children: [
+            HomeView(_tabController),
+            OrganizationalView(content),
+            DomainView(content.domains[0], true),
+            DomainView(content.domains[1], false),
+            DomainView(content.domains[2], false),
+            DomainView(content.domains[3], false),
+            const Icon(Icons.directions_bike),
+          ],
         ),
       ),
     );

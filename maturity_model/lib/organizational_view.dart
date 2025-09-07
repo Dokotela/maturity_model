@@ -1,20 +1,17 @@
-import 'package:creator/creator.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:graphic/graphic.dart';
-import 'package:maturity_model/creators.dart';
-
+import 'package:maturity_model/providers.dart';
 import 'content/content.dart';
 
-class OrganizationalView extends StatelessWidget {
-  const OrganizationalView(this.content, {Key? key}) : super(key: key);
+class OrganizationalView extends ConsumerWidget {
+  const OrganizationalView(this.content, {super.key});
 
   final Content content;
 
   @override
-  Widget build(BuildContext context) {
-    final textWidgetsList = <Widget>[];
-
-    Widget radarGraph(String title, List<Map<dynamic, dynamic>> data) => Column(
+  Widget build(BuildContext context, WidgetRef ref) {
+    Widget radarGraph(String title, List<Map<String, dynamic>> data) => Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(title, style: const TextStyle(fontSize: 24)),
@@ -22,39 +19,36 @@ class OrganizationalView extends StatelessWidget {
               margin: const EdgeInsets.only(top: 10),
               width: 300,
               height: 300,
-              child: Chart(
+              child: Chart<Map<String, dynamic>>(
                 data: data,
                 variables: {
                   'index': Variable(
-                    accessor: (Map map) => map['index'].toString(),
+                    accessor: (Map<String, dynamic> map) =>
+                        map['index'].toString(),
                   ),
                   'type': Variable(
-                    accessor: (Map map) => map['type'] as String,
+                    accessor: (Map<String, dynamic> map) =>
+                        map['type'] as String,
                   ),
                   'value': Variable(
-                      accessor: (Map map) => map['value'] as num,
-                      scale: LinearScale(min: 0, max: 5)),
+                    accessor: (Map<String, dynamic> map) => map['value'] as num,
+                    scale: LinearScale(min: 0, max: 5),
+                  ),
                 },
-                elements: [
-                  LineElement(
+                marks: [
+                  // Changed from 'elements' to 'marks'
+                  LineMark(
                     position:
                         Varset('index') * Varset('value') / Varset('type'),
-                    shape: ShapeAttr(value: BasicLineShape(loop: true)),
-                    color:
-                        ColorAttr(variable: 'type', values: Defaults.colors10),
+                    shape: ShapeEncode(value: BasicLineShape(loop: true)),
+                    color: ColorEncode(
+                        variable: 'type', values: Defaults.colors10),
                   ),
                 ],
                 coord: PolarCoord(),
                 axes: [
-                  Defaults.circularAxis
-                    ..labelMapper = null
-                    ..label = LabelStyle(
-                        maxLines: 2,
-                        style: Defaults.textStyle.copyWith(fontSize: 16)),
-                  Defaults.radialAxis
-                    ..labelMapper = null
-                    ..label = LabelStyle(
-                        style: Defaults.textStyle.copyWith(fontSize: 16)),
+                  Defaults.circularAxis,
+                  Defaults.radialAxis,
                 ],
                 selections: {
                   'touchMove': PointSelection(
@@ -72,47 +66,59 @@ class OrganizationalView extends StatelessWidget {
           ],
         );
 
+    final textWidgetsList = <Widget>[];
+    final level = ref.read(mmLevelProvider);
+
     for (var i = 0; i < content.domains.length; i++) {
       final domain = content.domains[i];
-      List<Map<dynamic, dynamic>> newData(Ref ref) {
-        final info = <Map<dynamic, dynamic>>[];
-        for (var i = 0; i < domain.groups.length; i++) {
+
+      List<Map<String, dynamic>> domainData() {
+        final info = <Map<String, dynamic>>[];
+        for (var j = 0; j < domain.groups.length; j++) {
+          final group = domain.groups[j];
+          final groupValue = ref.watch(groupProvider((level, group.title)));
+          final numberOfItems =
+              ref.watch(numberItemsProvider((level, group.title)));
+
           info.add({
             "type": domain.title,
-            "index": domain.groups[i].title,
-            "value": ref.watch(groupCreator(
-                    ref.read(mmLevelCreator), domain.groups[i].title)) /
-                ref.watch(numberItemsCreator(
-                    ref.read(mmLevelCreator), domain.groups[i].title)),
+            "index": group.title,
+            "value": numberOfItems > 0 ? groupValue / numberOfItems : 0,
           });
         }
         return info;
       }
 
       textWidgetsList.add(
-        Watcher(
-          (context, ref, child) => Container(
-            padding: const EdgeInsets.only(top: 30, bottom: 30),
-            color: i % 2 == 0 ? Colors.grey[200] : Colors.lightBlue[50],
-            width: MediaQuery.of(context).size.width * 0.4,
-            child: radarGraph(domain.title, newData(ref)),
-          ),
+        Container(
+          padding: const EdgeInsets.only(top: 30, bottom: 30),
+          color: i % 2 == 0 ? Colors.grey[200] : Colors.lightBlue[50],
+          width: MediaQuery.of(context).size.width * 0.4,
+          child: radarGraph(domain.title, domainData()),
         ),
       );
     }
 
-    Widget overallGraph(Ref ref) {
-      final info = <Map<dynamic, dynamic>>[];
-      final level = ref.read(mmLevelCreator);
+    List<Map<String, dynamic>> overallData() {
+      final info = <Map<String, dynamic>>[];
 
       double domainTotal(Domain domain) {
         double sum = 0;
+        int validGroups = 0;
+
         for (var i = 0; i < domain.groups.length; i++) {
-          sum += ref.watch(groupCreator(level, domain.groups[i].title)) /
-              ref.watch(numberItemsCreator(level, domain.groups[i].title));
+          final group = domain.groups[i];
+          final groupValue = ref.watch(groupProvider((level, group.title)));
+          final numberOfItems =
+              ref.watch(numberItemsProvider((level, group.title)));
+
+          if (numberOfItems > 0) {
+            sum += groupValue / numberOfItems;
+            validGroups++;
+          }
         }
 
-        return sum / domain.groups.length;
+        return validGroups > 0 ? sum / validGroups : 0;
       }
 
       for (var j = 0; j < content.domains.length; j++) {
@@ -122,19 +128,16 @@ class OrganizationalView extends StatelessWidget {
           "value": domainTotal(content.domains[j]),
         });
       }
-      print(info);
 
-      return radarGraph('Maturity Assessment', info);
+      return info;
     }
 
     return Scaffold(
       body: Row(
         children: [
-          Watcher(
-            (context, ref, child) => SizedBox(
-              width: MediaQuery.of(context).size.width * 0.5,
-              child: overallGraph(ref),
-            ),
+          SizedBox(
+            width: MediaQuery.of(context).size.width * 0.5,
+            child: radarGraph('Maturity Assessment', overallData()),
           ),
           SingleChildScrollView(
             child: Column(
