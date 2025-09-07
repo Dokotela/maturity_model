@@ -21,13 +21,19 @@ final organizationProvider = StateProvider<String>((ref) => '');
 
 final additionalInformationProvider = StateProvider<String>((ref) => '');
 
-// Family providers for parameterized state
+// Optimized family providers with autoDispose to prevent memory leaks
 final groupProvider = Provider.family<int, (MmLevel, String)>((ref, params) {
   final (mmLevel, name) = params;
-  var sum = 0;
+
+  // Get the number of items first
   final numberOfItems = ref.watch(numberItemsProvider((mmLevel, name)));
+  if (numberOfItems == 0) return 0;
+
+  // Only calculate sum for valid items
+  var sum = 0;
   for (var i = 0; i < numberOfItems; i++) {
-    sum += ref.watch(itemProvider((mmLevel, '$name/$i')));
+    final itemValue = ref.watch(itemProvider((mmLevel, '$name/$i')));
+    sum += itemValue;
   }
   return sum;
 });

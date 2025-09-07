@@ -19,7 +19,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => const MaterialApp(
-      home: DefaultTabController(length: 7, child: TabScaffold()));
+      home: DefaultTabController(length: 6, child: TabScaffold()));
 }
 
 class TabScaffold extends ConsumerStatefulWidget {
@@ -32,7 +32,7 @@ class TabScaffold extends ConsumerStatefulWidget {
 class _TabScaffoldState extends ConsumerState<TabScaffold>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController =
-      TabController(length: 7, vsync: this);
+      TabController(length: 6, vsync: this);
 
   @override
   Widget build(BuildContext context) {
@@ -62,7 +62,6 @@ class _TabScaffoldState extends ConsumerState<TabScaffold>
             newTab(Icons.manage_accounts, 'Management and Governance'),
             newTab(Icons.library_books, 'Knowledge Management and Sharing'),
             newTab(Icons.lightbulb_outline, 'Innovation'),
-            newTab(Icons.menu_book, 'Glossary'),
           ],
         ),
       ),
@@ -77,7 +76,6 @@ class _TabScaffoldState extends ConsumerState<TabScaffold>
             DomainView(content.domains[1], false),
             DomainView(content.domains[2], false),
             DomainView(content.domains[3], false),
-            const Icon(Icons.directions_bike),
           ],
         ),
       ),
