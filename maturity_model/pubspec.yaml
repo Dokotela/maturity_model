@@ -4,17 +4,22 @@ publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: '>=3.0.0 <4.0.0'
+  sdk: ">=3.0.0"
 
 dependencies:
-  csv: ^6.0.0
   flutter:
     sdk: flutter
+  collection: ^1.19.1
+  creator: ^0.3.3
+  csv: ^6.0.0
+  data_table_2: ^2.6.0
   flutter_riverpod: ^2.6.1
-  intl: ^0.20.2
-  shared_preferences: ^2.5.3
+  gap: ^3.0.1
+  graphic: ^2.6.0
+  gsheets: ^0.5.0
 
 dev_dependencies:
+  build_runner: ^2.8.0
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
@@ -22,5 +27,4 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets: 
-    - assets/csv/
-    - assets/images/
+    - assets/
