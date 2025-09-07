@@ -79,47 +79,58 @@ class _OptimizedStandardDomainViewState
 
     final subdomains = widget.domain.subdomains;
 
-    return ListView.builder(
-      controller: _scrollController,
-      padding: EdgeInsets.all(baseSpacing),
-      itemCount: subdomains.length,
-      itemBuilder: (context, index) {
-        final subdomain = subdomains[index];
-        final isExpanded = _expandedStates[subdomain.id] ?? true;
+    return Center(
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 1800),
+        child: Scrollbar(
+          controller: _scrollController,
+          thumbVisibility: true, // Always show the scrollbar
+          thickness: 12, // Make it wider
+          radius: const Radius.circular(6),
+          child: ListView.builder(
+            controller: _scrollController,
+            padding: EdgeInsets.all(baseSpacing),
+            itemCount: subdomains.length,
+            itemBuilder: (context, index) {
+              final subdomain = subdomains[index];
+              final isExpanded = _expandedStates[subdomain.id] ?? true;
 
-        return Card(
-          margin: EdgeInsets.only(bottom: baseSpacing * 0.75),
-          child: Theme(
-            data: theme.copyWith(dividerColor: Colors.transparent),
-            child: ExpansionTile(
-              initiallyExpanded: isExpanded,
-              onExpansionChanged: (expanded) {
-                setState(() {
-                  _expandedStates[subdomain.id] = expanded;
-                });
-              },
-              title: Text(
-                subdomain.name,
-                style: textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
+              return Card(
+                margin: EdgeInsets.only(bottom: baseSpacing * 0.75),
+                child: Theme(
+                  data: theme.copyWith(dividerColor: Colors.transparent),
+                  child: ExpansionTile(
+                    initiallyExpanded: isExpanded,
+                    onExpansionChanged: (expanded) {
+                      setState(() {
+                        _expandedStates[subdomain.id] = expanded;
+                      });
+                    },
+                    title: Text(
+                      subdomain.name,
+                      style: textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    subtitle: Text(
+                      '${subdomain.items.length} questions',
+                      style: textTheme.bodySmall?.copyWith(
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                    children: subdomain.items.map((item) {
+                      return AssessmentItemWidget(
+                        item: item,
+                        frameworkType: widget.frameworkType,
+                      );
+                    }).toList(),
+                  ),
                 ),
-              ),
-              subtitle: Text(
-                '${subdomain.items.length} questions',
-                style: textTheme.bodySmall?.copyWith(
-                  color: Colors.grey[600],
-                ),
-              ),
-              children: subdomain.items.map((item) {
-                return AssessmentItemWidget(
-                  item: item,
-                  frameworkType: widget.frameworkType,
-                );
-              }).toList(),
-            ),
+              );
+            },
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }

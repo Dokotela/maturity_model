@@ -149,7 +149,6 @@ class MyApp extends StatelessWidget {
             titleTextStyle: TextStyle(
               fontSize: scaledBase * 1.625,
               fontWeight: FontWeight.bold,
-              color: Colors.white,
             ),
             toolbarHeight: scaledBase * 4.375,
             elevation: 2,

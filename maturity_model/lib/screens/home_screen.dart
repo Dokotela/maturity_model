@@ -1,6 +1,7 @@
 // lib/screens/home_screen.dart
 
 import 'dart:async' show Timer;
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -44,9 +45,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final textTheme = theme.textTheme;
     final screenWidth = MediaQuery.of(context).size.width;
 
-    // Calculate spacing based on current text scale
-    final baseSpacing = textTheme.bodyMedium!.fontSize!;
-
     // Sync controllers with state
     if (_orgController.text != (session.organizationName ?? '')) {
       _orgController.text = session.organizationName ?? '';
@@ -58,28 +56,31 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       _locationController.text = session.location ?? '';
     }
 
+    // Determine container max width based on screen size, not text size
+    final containerMaxWidth = math.min(1400.0, screenWidth * 0.9);
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          'IS4H Maturity Assessment Tool',
-          style: theme.appBarTheme.titleTextStyle,
-        ),
+        title: const Text('IS4H Maturity Assessment Tool'),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
         child: Center(
           child: Container(
             constraints: BoxConstraints(
-              maxWidth: baseSpacing * 87.5, // Relative to text size
+              maxWidth: containerMaxWidth,
             ),
-            padding: EdgeInsets.all(baseSpacing * 0.75),
+            padding: EdgeInsets.symmetric(
+              horizontal: screenWidth > 600 ? 24.0 : 16.0,
+              vertical: 16.0,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // Organization Info Section
                 _buildOrganizationSection(context),
 
-                SizedBox(height: baseSpacing * 1.25),
+                const SizedBox(height: 24),
 
                 // Framework Selection Title
                 Text(
@@ -88,10 +89,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   textAlign: TextAlign.center,
                 ),
 
-                SizedBox(height: baseSpacing * 1),
+                const SizedBox(height: 20),
 
-                // Framework Cards - no Expanded needed in ScrollView
-                _buildFrameworkCards(context, screenWidth),
+                // Framework Cards
+                _buildFrameworkCards(context, containerMaxWidth),
               ],
             ),
           ),
@@ -103,22 +104,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget _buildOrganizationSection(BuildContext context) {
     final theme = Theme.of(context);
     final textTheme = theme.textTheme;
-    final baseSpacing = textTheme.bodyMedium!.fontSize!;
     final screenWidth = MediaQuery.of(context).size.width;
-    final useRowLayout =
-        screenWidth > baseSpacing * 50; // ~800px at normal scale
+
+    // Responsive breakpoint for row layout
+    final useRowLayout = screenWidth > 800;
 
     return Card(
       child: Padding(
-        padding: EdgeInsets.all(baseSpacing * 1),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               'Organization Information',
-              style: textTheme.titleLarge,
+              style: textTheme.titleMedium,
             ),
-            SizedBox(height: baseSpacing * 0.75),
+            const SizedBox(height: 12),
 
             // Responsive layout for text fields
             useRowLayout
@@ -129,6 +130,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           context: context,
                           controller: _orgController,
                           label: 'Organization',
+                          isCompact: true,
                           onChanged: (value) => _onTextFieldChanged(
                             value,
                             (v) => ref
@@ -137,12 +139,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           ),
                         ),
                       ),
-                      SizedBox(width: baseSpacing * 1.5),
+                      const SizedBox(width: 16),
                       Expanded(
                         child: _buildTextField(
                           context: context,
                           controller: _nameController,
                           label: 'Assessor',
+                          isCompact: true,
                           onChanged: (value) => _onTextFieldChanged(
                             value,
                             (v) => ref
@@ -151,12 +154,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           ),
                         ),
                       ),
-                      SizedBox(width: baseSpacing * 1.5),
+                      const SizedBox(width: 16),
                       Expanded(
                         child: _buildTextField(
                           context: context,
                           controller: _locationController,
                           label: 'Location',
+                          isCompact: true,
                           onChanged: (value) => _onTextFieldChanged(
                             value,
                             (v) => ref
@@ -173,6 +177,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         context: context,
                         controller: _orgController,
                         label: 'Organization',
+                        isCompact: true,
                         onChanged: (value) => _onTextFieldChanged(
                           value,
                           (v) => ref
@@ -180,11 +185,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               .updateOrganizationInfo(organizationName: v),
                         ),
                       ),
-                      SizedBox(height: baseSpacing * 0.75),
+                      const SizedBox(height: 12),
                       _buildTextField(
                         context: context,
                         controller: _nameController,
                         label: 'Assessor',
+                        isCompact: true,
                         onChanged: (value) => _onTextFieldChanged(
                           value,
                           (v) => ref
@@ -192,11 +198,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               .updateOrganizationInfo(assessorName: v),
                         ),
                       ),
-                      SizedBox(height: baseSpacing * 0.75),
+                      const SizedBox(height: 12),
                       _buildTextField(
                         context: context,
                         controller: _locationController,
                         label: 'Location',
+                        isCompact: true,
                         onChanged: (value) => _onTextFieldChanged(
                           value,
                           (v) => ref
@@ -217,76 +224,77 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     required TextEditingController controller,
     required String label,
     required Function(String) onChanged,
+    bool isCompact = false,
   }) {
-    // Let the input decoration theme handle all styling
+    final textTheme = Theme.of(context).textTheme;
+
     return TextField(
       controller: controller,
       onChanged: onChanged,
+      style: isCompact ? textTheme.bodySmall : null,
       decoration: InputDecoration(
         labelText: label,
+        labelStyle: isCompact ? textTheme.bodySmall : null,
+        isDense: isCompact,
+        contentPadding: isCompact
+            ? const EdgeInsets.symmetric(horizontal: 12, vertical: 8)
+            : null,
       ),
     );
   }
 
-  Widget _buildFrameworkCards(BuildContext context, double screenWidth) {
+  Widget _buildFrameworkCards(BuildContext context, double containerWidth) {
     final completionMap = ref.read(allFrameworksCompletionProvider);
-    final baseSpacing = Theme.of(context).textTheme.bodyMedium!.fontSize!;
+    final screenWidth = MediaQuery.of(context).size.width;
 
-    // Calculate card constraints based on text size
-    final cardMaxWidth = baseSpacing * 37.5; // Relative to font size
-    final useVerticalLayout =
-        screenWidth < baseSpacing * 56.25; // ~900px at normal scale
+    // Determine layout based on screen size
+    final bool useRowLayout = screenWidth > 768;
 
-    if (useVerticalLayout) {
-      // Stack cards vertically on smaller screens
-      return Column(
+    // Calculate card width based on container and layout
+    double cardWidth;
+    if (useRowLayout) {
+      // Two cards side by side with spacing
+      final spacing = 24.0;
+      cardWidth =
+          (containerWidth - spacing * 3) / 2; // Account for padding and gap
+      cardWidth = math.min(cardWidth, 600); // Max width per card
+    } else {
+      // Single column on mobile
+      cardWidth = containerWidth - 32; // Account for padding
+    }
+
+    final institutionalCard = SizedBox(
+      width: cardWidth,
+      child: _FrameworkCard(
+        type: FrameworkType.is4hInstitutional,
+        completion: completionMap[FrameworkType.is4hInstitutional] ?? 0.0,
+      ),
+    );
+
+    final countryCard = SizedBox(
+      width: cardWidth,
+      child: _FrameworkCard(
+        type: FrameworkType.is4hCountry,
+        completion: completionMap[FrameworkType.is4hCountry] ?? 0.0,
+      ),
+    );
+
+    if (useRowLayout) {
+      return Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Container(
-            constraints: BoxConstraints(maxWidth: cardMaxWidth),
-            child: _FrameworkCard(
-              type: FrameworkType.is4hInstitutional,
-              completion: completionMap[FrameworkType.is4hInstitutional] ?? 0.0,
-            ),
-          ),
-          SizedBox(height: baseSpacing * 1),
-          Container(
-            constraints: BoxConstraints(maxWidth: cardMaxWidth),
-            child: _FrameworkCard(
-              type: FrameworkType.is4hCountry,
-              completion: completionMap[FrameworkType.is4hCountry] ?? 0.0,
-            ),
-          ),
+          institutionalCard,
+          const SizedBox(width: 24),
+          countryCard,
         ],
       );
     } else {
-      // Side by side on larger screens
-      return Center(
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Flexible(
-              child: Container(
-                constraints: BoxConstraints(maxWidth: cardMaxWidth),
-                child: _FrameworkCard(
-                  type: FrameworkType.is4hInstitutional,
-                  completion:
-                      completionMap[FrameworkType.is4hInstitutional] ?? 0.0,
-                ),
-              ),
-            ),
-            SizedBox(width: baseSpacing * 1),
-            Flexible(
-              child: Container(
-                constraints: BoxConstraints(maxWidth: cardMaxWidth),
-                child: _FrameworkCard(
-                  type: FrameworkType.is4hCountry,
-                  completion: completionMap[FrameworkType.is4hCountry] ?? 0.0,
-                ),
-              ),
-            ),
-          ],
-        ),
+      return Column(
+        children: [
+          institutionalCard,
+          const SizedBox(height: 16),
+          countryCard,
+        ],
       );
     }
   }
@@ -307,16 +315,13 @@ class _FrameworkCard extends ConsumerWidget {
     final framework = ref.watch(frameworkProvider(type));
     final theme = Theme.of(context);
     final textTheme = theme.textTheme;
-    final baseSpacing = textTheme.bodyMedium!.fontSize!;
+    final screenWidth = MediaQuery.of(context).size.width;
 
-    // Icon size relative to headline text
-    final iconSize = textTheme.headlineLarge!.fontSize! * 1.5;
+    // Responsive icon sizing
+    final iconSize = screenWidth > 768 ? 48.0 : 40.0;
 
     return Card(
       elevation: theme.cardTheme.elevation,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(baseSpacing * 0.75),
-      ),
       child: InkWell(
         onTap: framework != null
             ? () {
@@ -330,9 +335,9 @@ class _FrameworkCard extends ConsumerWidget {
                 );
               }
             : null,
-        borderRadius: BorderRadius.circular(baseSpacing * 0.75),
-        child: Container(
-          padding: EdgeInsets.all(baseSpacing * 1.25),
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -341,10 +346,10 @@ class _FrameworkCard extends ConsumerWidget {
               Row(
                 children: [
                   Container(
-                    padding: EdgeInsets.all(baseSpacing * 0.75),
+                    padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: theme.primaryColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(baseSpacing * 0.5),
+                      color: theme.primaryColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
                     ),
                     child: Icon(
                       type == FrameworkType.is4hInstitutional
@@ -354,7 +359,7 @@ class _FrameworkCard extends ConsumerWidget {
                       size: iconSize,
                     ),
                   ),
-                  SizedBox(width: baseSpacing * 1),
+                  const SizedBox(width: 16),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -365,12 +370,12 @@ class _FrameworkCard extends ConsumerWidget {
                               : 'Country',
                           style: textTheme.headlineMedium,
                         ),
-                        SizedBox(height: baseSpacing * 0.125),
+                        const SizedBox(height: 2),
                         Text(
                           type == FrameworkType.is4hInstitutional
                               ? 'Healthcare Facilities'
                               : 'National Health Systems',
-                          style: textTheme.titleMedium?.copyWith(
+                          style: textTheme.titleSmall?.copyWith(
                             color: Colors.grey[700],
                           ),
                         ),
@@ -380,28 +385,27 @@ class _FrameworkCard extends ConsumerWidget {
                 ],
               ),
 
-              SizedBox(height: baseSpacing * 0.75),
+              const SizedBox(height: 16),
 
-              // Description - no Flexible wrapper
+              // Description
               Text(
                 type == FrameworkType.is4hInstitutional
                     ? 'Comprehensive assessment for healthcare facilities, hospitals, and institutions to evaluate information systems maturity.'
                     : 'National and regional framework for evaluating country-level health information systems readiness.',
-                style: textTheme.bodyLarge?.copyWith(
+                style: textTheme.bodyMedium?.copyWith(
                   color: Colors.grey[800],
+                  height: 1.4,
                 ),
-                overflow: TextOverflow.ellipsis,
-                maxLines: 3,
               ),
 
-              SizedBox(height: baseSpacing * 0.75),
+              const SizedBox(height: 16),
 
               // Progress Section
               Container(
-                padding: EdgeInsets.all(baseSpacing * 0.75),
+                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: Colors.grey[50],
-                  borderRadius: BorderRadius.circular(baseSpacing * 0.5),
+                  borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: Colors.grey[200]!),
                 ),
                 child: Column(
@@ -417,27 +421,28 @@ class _FrameworkCard extends ConsumerWidget {
                           '${completion.toStringAsFixed(1)}%',
                           style: textTheme.headlineSmall?.copyWith(
                             color: _getColorForCompletion(completion),
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                       ],
                     ),
-                    SizedBox(height: baseSpacing * 0.5),
+                    const SizedBox(height: 8),
                     ClipRRect(
-                      borderRadius: BorderRadius.circular(baseSpacing * 0.25),
+                      borderRadius: BorderRadius.circular(4),
                       child: LinearProgressIndicator(
                         value: completion / 100,
                         backgroundColor: Colors.grey[300],
                         valueColor: AlwaysStoppedAnimation<Color>(
                           _getColorForCompletion(completion),
                         ),
-                        minHeight: baseSpacing * 0.5,
+                        minHeight: 8,
                       ),
                     ),
                     if (framework != null && framework.unansweredCount > 0) ...[
-                      SizedBox(height: baseSpacing * 0.375),
+                      const SizedBox(height: 6),
                       Text(
                         '${framework.unansweredCount} questions remaining',
-                        style: textTheme.bodyMedium?.copyWith(
+                        style: textTheme.bodySmall?.copyWith(
                           color: Colors.grey[600],
                         ),
                       ),
@@ -446,12 +451,12 @@ class _FrameworkCard extends ConsumerWidget {
                 ),
               ),
 
-              SizedBox(height: baseSpacing * 0.75),
+              const SizedBox(height: 16),
 
               // Start Button
               SizedBox(
                 width: double.infinity,
-                height: baseSpacing * 3,
+                height: 48,
                 child: ElevatedButton(
                   onPressed: framework != null
                       ? () {
@@ -467,7 +472,7 @@ class _FrameworkCard extends ConsumerWidget {
                       : null,
                   style: ElevatedButton.styleFrom(
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(baseSpacing * 0.5),
+                      borderRadius: BorderRadius.circular(8),
                     ),
                   ),
                   child: Text(

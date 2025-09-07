@@ -44,14 +44,17 @@ class AssessmentItemWidget extends StatelessWidget {
     final isAnswered = item.response != null && item.response! > 0;
 
     return Container(
-      padding: EdgeInsets.all(baseSpacing),
+      padding: EdgeInsets.symmetric(
+        horizontal: baseSpacing * 0.5,
+        vertical: baseSpacing * 0.4,
+      ),
       decoration: BoxDecoration(
         border: Border(
           left: BorderSide(
             color: isAnswered
                 ? Colors.green.withValues(alpha: 0.5)
                 : Colors.transparent,
-            width: baseSpacing * 0.1875,
+            width: 3,
           ),
         ),
       ),
@@ -65,7 +68,7 @@ class AssessmentItemWidget extends StatelessWidget {
               fontWeight: FontWeight.w500,
             ),
           ),
-          SizedBox(height: baseSpacing * 0.75),
+          SizedBox(height: baseSpacing * 0.5),
 
           // Response widget based on type
           _ResponseWidget(
@@ -75,7 +78,7 @@ class AssessmentItemWidget extends StatelessWidget {
 
           // Scoring note if available
           if (item.scoringNote != null && item.scoringNote!.isNotEmpty) ...[
-            SizedBox(height: baseSpacing * 0.5),
+            SizedBox(height: baseSpacing * 0.3),
             Text(
               item.scoringNote!,
               style: textTheme.bodySmall?.copyWith(
