@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:maturity_model/providers.dart';
@@ -14,20 +15,30 @@ class DomainView extends ConsumerStatefulWidget {
   ConsumerState<DomainView> createState() => _DomainViewState();
 }
 
-class _DomainViewState extends ConsumerState<DomainView> {
+class _DomainViewState extends ConsumerState<DomainView>
+    with AutomaticKeepAliveClientMixin {
   late final ScrollController _scrollController;
-  final List<Widget> _items = [];
-  bool _itemsBuilt = false;
+  late final FocusNode _focusNode;
+  bool _initialized = false;
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
     super.initState();
     _scrollController = ScrollController();
+    _focusNode = FocusNode();
 
-    // Initialize the number of items after the first frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initializeItemCounts();
-      _buildItems();
+      if (mounted) {
+        setState(() {
+          _initialized = true;
+        });
+        // Request focus after building
+        _focusNode.requestFocus();
+      }
     });
   }
 
@@ -48,52 +59,153 @@ class _DomainViewState extends ConsumerState<DomainView> {
     }
   }
 
-  void _buildItems() {
+  // Calculate total item count for ListView
+  int _getTotalItemCount() {
+    int count = 0;
     for (var group in widget.domain.groups) {
-      _items.add(const Gap(24));
-      _items.add(_GroupRow(group: group));
-
-      int i = 0;
+      count += 2; // Gap + Group header
       for (var item in group.items) {
-        _items.add(const Gap(4));
+        count++; // Gap before item
+        if (item is Subgroup) {
+          count += 2; // Extra gap + subgroup header
+          count += item.questions.length * 2; // Gap + question for each
+        } else {
+          count++; // Question
+        }
+      }
+    }
+    return count;
+  }
+
+  // Build the widget at a specific index (true lazy loading)
+  Widget _buildItemAtIndex(int index) {
+    int currentIndex = 0;
+
+    for (var group in widget.domain.groups) {
+      // Gap before group
+      if (currentIndex == index) return const Gap(24);
+      currentIndex++;
+
+      // Group header
+      if (currentIndex == index) {
+        return RepaintBoundary(
+          child: _GroupRow(group: group),
+        );
+      }
+      currentIndex++;
+
+      int questionIndex = 0;
+      for (var item in group.items) {
+        // Gap before item
+        if (currentIndex == index) return const Gap(4);
+        currentIndex++;
 
         if (item is Subgroup) {
-          _items.add(const Gap(8));
-          _items.add(_SubgroupHeader(subgroup: item));
+          // Extra gap before subgroup
+          if (currentIndex == index) return const Gap(8);
+          currentIndex++;
+
+          // Subgroup header
+          if (currentIndex == index) {
+            return RepaintBoundary(
+              child: _SubgroupHeader(subgroup: item),
+            );
+          }
+          currentIndex++;
 
           for (var question in item.questions) {
-            _items.add(const Gap(4));
-            _items.add(_ItemRow(
-              question: question,
-              name: '${group.title}/$i',
-              key: ValueKey('${group.title}/$i'),
-            ));
-            i++;
+            // Gap before question
+            if (currentIndex == index) return const Gap(4);
+            currentIndex++;
+
+            // Question row
+            if (currentIndex == index) {
+              return RepaintBoundary(
+                child: _ItemRow(
+                  question: question,
+                  name: '${group.title}/$questionIndex',
+                ),
+              );
+            }
+            currentIndex++;
+            questionIndex++;
           }
         } else if (item is Question) {
-          _items.add(_ItemRow(
-            question: item,
-            name: '${group.title}/$i',
-            key: ValueKey('${group.title}/$i'),
-          ));
-          i++;
+          // Question row
+          if (currentIndex == index) {
+            return RepaintBoundary(
+              child: _ItemRow(
+                question: item,
+                name: '${group.title}/$questionIndex',
+              ),
+            );
+          }
+          currentIndex++;
+          questionIndex++;
         }
       }
     }
 
-    setState(() {
-      _itemsBuilt = true;
-    });
+    return const SizedBox.shrink();
+  }
+
+  // FIXED: Proper signature for KeyboardListener.onKeyEvent
+  KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {
+    if (event is! KeyDownEvent) return KeyEventResult.ignored;
+
+    final currentOffset = _scrollController.offset;
+    const smallScroll = 100.0;
+    final largeScroll = MediaQuery.of(context).size.height * 0.8;
+
+    switch (event.logicalKey) {
+      case LogicalKeyboardKey.arrowDown:
+        _scrollController.jumpTo(
+          (currentOffset + smallScroll).clamp(
+            0.0,
+            _scrollController.position.maxScrollExtent,
+          ),
+        );
+        return KeyEventResult.handled;
+      case LogicalKeyboardKey.arrowUp:
+        _scrollController.jumpTo(
+          (currentOffset - smallScroll).clamp(0.0, double.infinity),
+        );
+        return KeyEventResult.handled;
+      case LogicalKeyboardKey.pageDown:
+        _scrollController.jumpTo(
+          (currentOffset + largeScroll).clamp(
+            0.0,
+            _scrollController.position.maxScrollExtent,
+          ),
+        );
+        return KeyEventResult.handled;
+      case LogicalKeyboardKey.pageUp:
+        _scrollController.jumpTo(
+          (currentOffset - largeScroll).clamp(0.0, double.infinity),
+        );
+        return KeyEventResult.handled;
+      case LogicalKeyboardKey.home:
+        _scrollController.jumpTo(0);
+        return KeyEventResult.handled;
+      case LogicalKeyboardKey.end:
+        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+        return KeyEventResult.handled;
+      default:
+        return KeyEventResult.ignored;
+    }
   }
 
   @override
   void dispose() {
     _scrollController.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
+
     final columnFirst = 0.22;
     final columns = 0.14;
 
@@ -127,17 +239,30 @@ class _DomainViewState extends ConsumerState<DomainView> {
           children: [
             dataTable,
             Expanded(
-              child: !_itemsBuilt
+              child: !_initialized
                   ? const Center(child: CircularProgressIndicator())
-                  : Scrollbar(
-                      controller: _scrollController,
-                      thumbVisibility: true,
-                      thickness: 15, // Add this line
-                      radius: const Radius.circular(8), // Add this line
-                      child: ListView.builder(
-                        controller: _scrollController,
-                        itemCount: _items.length,
-                        itemBuilder: (context, index) => _items[index],
+                  : Focus(
+                      focusNode: _focusNode,
+                      autofocus: true,
+                      onKeyEvent:
+                          _handleKeyEvent, // Focus widget uses this signature
+                      child: GestureDetector(
+                        onTap: () => _focusNode.requestFocus(),
+                        child: Scrollbar(
+                          controller: _scrollController,
+                          thumbVisibility: true,
+                          thickness: 15,
+                          radius: const Radius.circular(8),
+                          child: ListView.builder(
+                            controller: _scrollController,
+                            itemCount: _getTotalItemCount(),
+                            itemBuilder: (context, index) =>
+                                _buildItemAtIndex(index),
+                            // Performance settings
+                            cacheExtent: 1000,
+                            physics: const ClampingScrollPhysics(),
+                          ),
+                        ),
                       ),
                     ),
             ),
@@ -155,13 +280,15 @@ class _GroupRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final columnFirst = 0.22;
-    final columns = 0.14;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final columnFirst = screenWidth * 0.22;
+    final columns = screenWidth * 0.14;
 
     Widget groupRowSizedBox(double width, Color color, String text) =>
         Container(
           decoration: BoxDecoration(color: color, border: Border.all()),
-          width: MediaQuery.of(context).size.width * width,
+          width: width,
+          padding: const EdgeInsets.all(8.0),
           child: Text(text),
         );
 
@@ -170,8 +297,12 @@ class _GroupRow extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Container(
-            color: Colors.grey[400]!,
-            width: MediaQuery.of(context).size.width * columnFirst,
+            decoration: BoxDecoration(
+              color: Colors.grey[400]!,
+              border: Border.all(),
+            ),
+            width: columnFirst,
+            padding: const EdgeInsets.all(8.0),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -206,12 +337,14 @@ class _SubgroupHeader extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.start,
       children: [
-        Container(
-          decoration: BoxDecoration(border: Border.all()),
+        SizedBox(
           width: MediaQuery.of(context).size.width * 0.3,
           child: Padding(
             padding: const EdgeInsets.all(4.0),
-            child: Text(subgroup.text),
+            child: Text(
+              subgroup.text,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
           ),
         ),
       ],
@@ -224,15 +357,15 @@ class _ItemRow extends ConsumerWidget {
   final String name;
 
   const _ItemRow({
-    super.key,
     required this.question,
     required this.name,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final columnFirst = 0.22;
-    final columns = 0.14;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final columnFirst = screenWidth * 0.22;
+    final columns = screenWidth * 0.14;
 
     Widget itemRowBox(
       double width,
@@ -241,7 +374,7 @@ class _ItemRow extends ConsumerWidget {
     ]) {
       return Container(
         decoration: BoxDecoration(border: Border.all()),
-        width: MediaQuery.of(context).size.width * width,
+        width: width,
         child: Padding(
           padding: const EdgeInsets.all(4.0),
           child: value == null

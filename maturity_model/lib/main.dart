@@ -57,11 +57,11 @@ class _TabScaffoldState extends ConsumerState<TabScaffold>
           controller: _tabController,
           tabs: [
             newTab(Icons.home, 'Home'),
-            newTab(Icons.apartment, 'Organizational Results'),
             newTab(Icons.devices, 'Data Management and Information Technology'),
             newTab(Icons.manage_accounts, 'Management and Governance'),
             newTab(Icons.library_books, 'Knowledge Management and Sharing'),
             newTab(Icons.lightbulb_outline, 'Innovation'),
+            newTab(Icons.apartment, 'Organizational Results'),
           ],
         ),
       ),
@@ -70,12 +70,12 @@ class _TabScaffoldState extends ConsumerState<TabScaffold>
         child: TabBarView(
           controller: _tabController,
           children: [
-            HomeView(_tabController),
-            OrganizationalView(content),
+            const HomeView(),
             DomainView(content.domains[0], true),
             DomainView(content.domains[1], false),
             DomainView(content.domains[2], false),
             DomainView(content.domains[3], false),
+            OrganizationalView(content),
           ],
         ),
       ),
